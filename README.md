@@ -8,6 +8,8 @@ a 2/3 multisig already exists on devnet, keys in [`src/__tests__/keys.ts`](src/_
 
 npm install
 
+cp src/knownAccounts.example.ts src/knownAccounts.ts #fix compile error
+
 # you can run all commands  multiple times, it's safe
 
 # create multisig
