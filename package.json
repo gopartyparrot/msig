@@ -1,26 +1,17 @@
 {
   "name": "serum-multisig-cli",
   "version": "2.0.0",
-  "description": "Starter to create node-command-line utilities",
-  "main": "index.js",
+  "description": "serum multisig cli",
+  "main": "src/cli.ts",
   "scripts": {
     "build": "tsc",
-    "format:check": "prettier --list-different '{src,__mocks__,bin}/**/*.ts'",
-    "format:write": "prettier --write '{src,__mocks__,bin}/**/*.ts'",
+    "format:check": "prettier --list-different 'src/**/*.ts'",
+    "format:write": "prettier --write 'src/**/*.ts'",
     "start": "env-cmd ts-node ./src/cli.ts",
-    "start:help": "ts-node ./src/bin/order.bin.ts -h",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "report:coverage": "npm run test:coverage && codecov"
   },
-  "bin": {
-    "serum-multisig-cli": "./src/bin/order.bin.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/kreuzerk/serum-multisig-cli.git"
-  },
-  "author": "Kevin Kreuzer",
   "license": "MIT",
   "dependencies": {
     "@project-serum/anchor": "^0.14.0",
