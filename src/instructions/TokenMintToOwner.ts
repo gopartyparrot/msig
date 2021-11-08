@@ -7,7 +7,7 @@ import {
 import { PublicKey } from "@solana/web3.js";
 
 import { ProposalBase, TransactionInstructionExt } from "./ProposalBase";
-import { MultisigContext } from "./types";
+import { MultisigContext } from "../types";
 
 // mint(0) -> dest(1) -> owner authority(2, multisig PDA)
 export class TokenMintToOwner extends ProposalBase {
@@ -45,6 +45,7 @@ export class TokenMintToOwner extends ProposalBase {
     const solBalance = await ctx.multisigProg.provider.connection.getBalance(
       associatedTokenAddress
     );
+
     if (solBalance === 0) {
       ret.prepare = {
         instructions: [

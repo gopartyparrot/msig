@@ -1,0 +1,14 @@
+{
+  "name": "example-cli",
+  "version": "1.0.0",
+  "scripts": {
+    "create": "./node_modules/.bin/msig create --wallet ../a.json",
+    "verify": "./node_modules/.bin/msig verify --wallet ../b.json",
+    "approve": "./node_modules/.bin/msig approve --wallet ../b.json"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.30.2",
+    "@parrotfi/msig": "^1.0.0"
+  }
+}

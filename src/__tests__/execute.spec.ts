@@ -1,35 +1,27 @@
-import {
-  findMultisigSigner,
-  getProgramFromEnv,
-  setupJSONPrint,
-} from "../common/utils";
-import { setProposals } from "../proposals";
-import { prepareDevnetEnv } from "./common";
-import { testProposals } from "./proposals";
-import { batchApproveExecute } from "../commands/batchApproveExecute";
-import { ENV } from "../env";
-import { TEST_KEYS } from "./keys";
+import { findMultisigSigner, setupJSONPrint } from "../utils";
+import { ensureDevnetEnv, getProgramFromEnvWithWallet } from "./common";
+import { batchApproveExecuteProposals } from "../commands/batchApproveExecute";
+import { testProposals, TEST_KEYS } from "./common";
 
 describe("create proposals", () => {
   it("should create success", async () => {
     setupJSONPrint();
-    setProposals(testProposals); //replace default global proposals with test proposals
 
-    const program = getProgramFromEnv(TEST_KEYS.memberB);
-    await prepareDevnetEnv(program, TEST_KEYS.memberB); //ensure SOL
+    const program = getProgramFromEnvWithWallet(TEST_KEYS.memberB);
+    await ensureDevnetEnv(program, TEST_KEYS.memberB); //ensure SOL
 
     const multisigSigner = await findMultisigSigner(
       program.programId,
       TEST_KEYS.multisig.publicKey
     );
 
-    await batchApproveExecute(
+    await batchApproveExecuteProposals(
       program,
       {
-        multisigProgram: ENV.multisigProgram,
         multisig: TEST_KEYS.multisig.publicKey,
         multisigSigner,
       },
+      testProposals,
       true
     );
   });

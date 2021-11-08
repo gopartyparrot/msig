@@ -1,0 +1,17 @@
+{
+  "name": "example-sdk",
+  "version": "1.0.0",
+  "scripts": {
+    "create": "ts-node src/create.ts",
+    "verify": "ts-node src/verify.ts",
+    "approve": "ts-node src/approve.ts"
+  },
+  "dependencies": {
+    "@solana/spl-token": "^0.1.8",
+    "@solana/web3.js": "^1.30.2",
+    "@parrotfi/msig": "file:../.."
+  },
+  "devDependencies": {
+    "ts-node": "^10.4.0"
+  }
+}

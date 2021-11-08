@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import { ProposalBase, TransactionInstructionExt } from "./ProposalBase";
-import { MultisigContext } from "./types";
+import { MultisigContext } from "../types";
 
 const BPF_LOADER_UPGRADEABLE_PID = new PublicKey(
   "BPFLoaderUpgradeab1e11111111111111111111111"

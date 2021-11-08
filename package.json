@@ -1,16 +1,28 @@
 {
-  "name": "serum-multisig-cli",
-  "version": "2.0.0",
+  "name": "@parrotfi/msig",
+  "version": "1.0.0",
   "description": "serum multisig cli",
-  "main": "src/cli.ts",
+  "type": "commonjs",
+  "main": "lib/src/index.js",
+  "types": "lib/src/index.d.ts",
   "scripts": {
     "build": "tsc",
     "format:check": "prettier --list-different 'src/**/*.ts'",
     "format:write": "prettier --write 'src/**/*.ts'",
     "start": "env-cmd ts-node ./src/cli.ts",
-    "test": "jest",
-    "test:coverage": "jest --coverage",
-    "report:coverage": "npm run test:coverage && codecov"
+    "test:setup": "jest --testTimeout 500000 src/__tests__/setupMultisig.spec.ts",
+    "test:create": "jest --testTimeout 500000 src/__tests__/create.spec.ts",
+    "test:verify": "jest --testTimeout 500000 src/__tests__/verify.spec.ts",
+    "test:approve": "jest --testTimeout 500000 src/__tests__/execute.spec.ts",
+    "report:coverage": "npm run test:coverage && codecov",
+    "pub": "rm -rf lib && tsc && npm publish --access public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gopartyparrot/msig"
+  },
+  "bin": {
+    "msig": "./lib/src/bin/cli.js"
   },
   "license": "MIT",
   "dependencies": {
@@ -18,11 +30,11 @@
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.30.2",
     "commander": "^8.2.0",
-    "env-cmd": "^10.1.0",
     "js-base64": "^3.7.2",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.9.4",
     "jest": "^27.2.0",

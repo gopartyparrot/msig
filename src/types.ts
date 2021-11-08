@@ -1,12 +1,12 @@
 import { Program } from "@project-serum/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
+import { ProposalBase } from "./instructions";
 
 export type NamedPubkey = { [key: string]: PublicKey };
 
 export type MultisigContext = {
   multisigProg: Program;
   multisigPDA: PublicKey;
-  //any context you need ...
 };
 
 export type MultisigTransactionStruct = {
@@ -19,11 +19,6 @@ export type MultisigTransactionStruct = {
   ownerSetSeqno: number;
 };
 
-export interface AccountState<T> {
-  pubkey: PublicKey;
-  state: T | null;
-}
-
 export type MultisigStruct = {
   owners: PublicKey[];
   threshold: number;
@@ -31,7 +26,11 @@ export type MultisigStruct = {
 };
 
 export interface IEnvPublicKeys {
-  multisigProgram: PublicKey;
   multisig: PublicKey;
   multisigSigner: PublicKey;
+}
+
+export interface IProposals {
+  multisig: PublicKey; //multisig address(not PDA)
+  transactions: ProposalBase[];
 }

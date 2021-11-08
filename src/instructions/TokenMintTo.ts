@@ -2,7 +2,7 @@ import { Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
 import { ProposalBase, TransactionInstructionExt } from "./ProposalBase";
-import { MultisigContext } from "./types";
+import { MultisigContext } from "../types";
 
 // mint(0) -> dest(1) -> owner authority(2, multisig PDA)
 export class TokenMintTo extends ProposalBase {

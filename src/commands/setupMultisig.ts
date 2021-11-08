@@ -14,21 +14,17 @@ export async function createMultisig(
   if (!multisig) {
     multisig = Keypair.generate();
   }
-  const [multisigSigner, nonce] = await PublicKey.findProgramAddress(
-    [multisig.publicKey.toBuffer()],
-    multisigProgram.programId
-  );
-
-  if (
-    (await multisigProgram.provider.connection.getBalance(multisig.publicKey)) >
-    0
-  ) {
+  const currentMultisigBalance =
+    await multisigProgram.provider.connection.getBalance(multisig.publicKey);
+  if (currentMultisigBalance > 0) {
     console.log("multisig account already exists");
     return;
   }
 
-  console.log("will create multisig:", multisig.publicKey.toBase58());
-  console.log("multisigSigner:", multisigSigner.toBase58());
+  const [multisigSigner, nonce] = await PublicKey.findProgramAddress(
+    [multisig.publicKey.toBuffer()],
+    multisigProgram.programId
+  );
 
   const txid = await multisigProgram.rpc.createMultisig(
     owners,
@@ -49,4 +45,10 @@ export async function createMultisig(
     }
   );
   console.log("txid:", txid);
+  console.log(
+    "msig wallet address (⚠️⚠️⚠️ don't send tokens to this address ⚠️⚠️⚠️):"
+  );
+  console.log(multisig.publicKey.toBase58());
+  console.log("msig wallet PDA (send tokens here):");
+  console.log(multisigSigner.toBase58());
 }

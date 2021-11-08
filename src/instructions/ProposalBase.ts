@@ -10,7 +10,7 @@ import {
   MultisigContext,
   MultisigTransactionStruct,
   NamedPubkey,
-} from "./types";
+} from "../types";
 
 export abstract class ProposalBase {
   constructor(

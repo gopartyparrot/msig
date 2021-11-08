@@ -8,7 +8,7 @@ import {
 import { Connection, PublicKey } from "@solana/web3.js";
 
 import { ProposalBase, TransactionInstructionExt } from "./ProposalBase";
-import { MultisigContext } from "./types";
+import { MultisigContext } from "../types";
 
 export class TransferTokenToOwner extends ProposalBase {
   constructor(

@@ -7,27 +7,28 @@ import {
 import chalk from "chalk";
 import {
   assertProposerIsOwnerOfMultisig,
-  getProposalsChainStates,
-} from "../common/utils";
+  ensureProposalsMemoUnique,
+  fetchProposalsChainStates,
+} from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
 import {
   IEnvPublicKeys,
   MultisigContext,
   MultisigStruct,
   MultisigTransactionStruct,
-} from "../instructions/types";
-import { PROPOSALS } from "../proposals";
+} from "../types";
 
 import { verify } from "./batchVerify";
 
-export async function batchApproveExecute(
+export async function batchApproveExecuteProposals(
   multisigProg: Program,
   accounts: IEnvPublicKeys,
+  proposals: ProposalBase[],
   verbose: boolean
 ) {
+  ensureProposalsMemoUnique(proposals);
   const proposerPubkey = multisigProg.provider.wallet.publicKey;
-  const proposals = PROPOSALS;
-  const chainTransactions = await getProposalsChainStates(
+  const chainTransactions = await fetchProposalsChainStates(
     multisigProg,
     proposals
   );
@@ -42,15 +43,14 @@ export async function batchApproveExecute(
   };
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i];
+    const txPubkey = prop.calcTransactionAccount().publicKey;
     const chainTx = chainTransactions[i];
-    console.log(
-      `=======>> approve/execute ${prop.memo} ${chainTx.pubkey.toBase58()}`
-    );
-    if (chainTx.state == null) {
+    console.log(`======>> approve/execute ${prop.memo} ${txPubkey.toBase58()}`);
+    if (chainTx == null) {
       console.log(chalk.red(` not created, continue`));
       continue;
     }
-    if (chainTx.state.didExecute) {
+    if (chainTx.data.didExecute) {
       console.log(chalk.grey(` did executed, skip approve/execute, continue`));
       continue;
     }
@@ -58,14 +58,14 @@ export async function batchApproveExecute(
     const currentSignerIndex = multisigState.owners.findIndex((x) =>
       x.equals(proposerPubkey)
     );
-    const isCurrentProposerApproved = chainTx.state.signers[currentSignerIndex];
-    const approvedCount = chainTx.state.signers.filter((x) => x).length;
+    const isCurrentProposerApproved = chainTx.data.signers[currentSignerIndex];
+    const approvedCount = chainTx.data.signers.filter((x) => x).length;
 
     await approveExecute(
       ctx,
       accounts.multisig,
       prop,
-      chainTx.state,
+      chainTx.data,
       proposerPubkey,
       {
         needApprove: !isCurrentProposerApproved,

@@ -5,24 +5,24 @@ import chalk from "chalk";
 import { encode } from "js-base64";
 import {
   assertProposerIsOwnerOfMultisig,
+  ensureProposalsMemoUnique,
   printKeys,
   sleep,
-} from "../common/utils";
+} from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
-import { IEnvPublicKeys, MultisigContext } from "../instructions/types";
-import { PROPOSALS } from "../proposals";
+import { IEnvPublicKeys, MultisigContext } from "../types";
 
 /// create configured multisig tx
 export async function batchCreate(
   multisigProg: Program,
-  accounts: IEnvPublicKeys
+  accounts: IEnvPublicKeys,
+  proposals: ProposalBase[]
 ) {
-  const proposals = PROPOSALS;
+  ensureProposalsMemoUnique(proposals);
   const proposerPubkey = multisigProg.provider.wallet.publicKey;
   const txPubkeys = proposals.map((p) => p.calcTransactionAccount().publicKey);
   const multipleAccounts =
     await multisigProg.provider.connection.getMultipleAccountsInfo(txPubkeys);
-
   const multisigState: any = await multisigProg.account.multisig.fetch(
     accounts.multisig
   );

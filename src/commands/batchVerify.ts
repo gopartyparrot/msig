@@ -2,23 +2,27 @@ import { Program } from "@project-serum/anchor";
 import * as browserBuffer from "buffer";
 import chalk from "chalk";
 import { encode } from "js-base64";
-import { getProposalsChainStates, printKeys } from "../common/utils";
+import {
+  ensureProposalsMemoUnique,
+  fetchProposalsChainStates,
+  printKeys,
+} from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
 import {
   IEnvPublicKeys,
   MultisigContext,
   MultisigTransactionStruct,
-} from "../instructions/types";
-import { PROPOSALS } from "../proposals";
+} from "../types";
 
 /// verify configured multisig tx
 export async function batchVerify(
   multisigProg: Program,
   accounts: IEnvPublicKeys,
+  proposals: ProposalBase[],
   verbose: boolean
 ) {
-  const proposals = PROPOSALS;
-  const chainTransactions = await getProposalsChainStates(
+  ensureProposalsMemoUnique(proposals);
+  const chainTransactions = await fetchProposalsChainStates(
     multisigProg,
     proposals
   );
@@ -30,15 +34,15 @@ export async function batchVerify(
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i];
     const chainTx = chainTransactions[i];
-    if (chainTx.state == null) {
+    if (chainTx == null) {
       console.log(prop.memo, chalk.yellow(` not created, skip verify`));
       continue;
     }
-    if (chainTx.state.didExecute) {
+    if (chainTx.data.didExecute) {
       console.log(prop.memo, chalk.grey(` did executed, skip verify`));
       continue;
     }
-    await verify(ctx, prop, chainTx.state, verbose);
+    await verify(ctx, prop, chainTx.data, verbose);
   }
 }
 

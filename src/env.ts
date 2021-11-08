@@ -7,9 +7,6 @@ export var ENV = {
     process.env.MULTISIG_PROGRAM ||
       "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"
   ), //default devnet program
-  multisigAddress: new PublicKey(
-    process.env.MULTISIG_ADDRESS || "11111111111111111111111111111111"
-  ), //111 as placeholder, just avoid init error when env not configured
-  walletPath: process.env.WALLET || join(homedir(), ".config/solana/id.json"), //some key path like id.json
+  wallet: process.env.WALLET || join(homedir(), ".config/solana/id.json"), //some key path like id.json
   rpcUrl: process.env.RPC_URL || "https://api.devnet.solana.com",
 };
