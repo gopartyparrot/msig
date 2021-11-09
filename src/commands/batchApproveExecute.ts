@@ -12,7 +12,6 @@ import {
 } from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
 import {
-  IEnvPublicKeys,
   MultisigContext,
   MultisigStruct,
   MultisigTransactionStruct,
@@ -21,11 +20,11 @@ import {
 import { verify } from "./batchVerify";
 
 export async function batchApproveExecuteProposals(
-  multisigProg: Program,
-  accounts: IEnvPublicKeys,
+  ctx: MultisigContext,
   proposals: ProposalBase[],
   verbose: boolean
 ) {
+  const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
   const proposerPubkey = multisigProg.provider.wallet.publicKey;
   const chainTransactions = await fetchProposalsChainStates(
@@ -34,13 +33,9 @@ export async function batchApproveExecuteProposals(
   );
 
   const multisigState: MultisigStruct =
-    (await multisigProg.account.multisig.fetch(accounts.multisig)) as any;
+    (await multisigProg.account.multisig.fetch(ctx.multisig)) as any;
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState);
 
-  const ctx = {
-    multisigProg: multisigProg,
-    multisigPDA: accounts.multisigSigner,
-  };
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i];
     const txPubkey = prop.calcTransactionAccount().publicKey;
@@ -63,7 +58,6 @@ export async function batchApproveExecuteProposals(
 
     await approveExecute(
       ctx,
-      accounts.multisig,
       prop,
       chainTx.data,
       proposerPubkey,
@@ -80,7 +74,6 @@ export async function batchApproveExecuteProposals(
 
 async function approveExecute(
   ctx: MultisigContext,
-  multisigPubkey: PublicKey,
   proposal: ProposalBase,
   chainTxState: MultisigTransactionStruct,
   proposerPubkey: PublicKey,
@@ -102,7 +95,7 @@ async function approveExecute(
     instrs.push(
       ctx.multisigProg.instruction.approve({
         accounts: {
-          multisig: multisigPubkey,
+          multisig: ctx.multisig,
           transaction: txKeypair.publicKey,
           owner: proposerPubkey,
         },
@@ -113,7 +106,7 @@ async function approveExecute(
     instrs.push(
       ctx.multisigProg.instruction.executeTransaction({
         accounts: {
-          multisig: multisigPubkey,
+          multisig: ctx.multisig,
           multisigSigner: ctx.multisigPDA,
           transaction: txKeypair.publicKey,
         },

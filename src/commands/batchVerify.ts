@@ -8,29 +8,21 @@ import {
   printKeys,
 } from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
-import {
-  IEnvPublicKeys,
-  MultisigContext,
-  MultisigTransactionStruct,
-} from "../types";
+import { MultisigContext, MultisigTransactionStruct } from "../types";
 
 /// verify configured multisig tx
 export async function batchVerify(
-  multisigProg: Program,
-  accounts: IEnvPublicKeys,
+  ctx: MultisigContext,
   proposals: ProposalBase[],
   verbose: boolean
 ) {
+  const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
   const chainTransactions = await fetchProposalsChainStates(
     multisigProg,
     proposals
   );
 
-  const ctx = {
-    multisigProg: multisigProg,
-    multisigPDA: accounts.multisigSigner,
-  };
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i];
     const chainTx = chainTransactions[i];

@@ -1,5 +1,4 @@
-import { Program } from "@project-serum/anchor";
-import { AccountInfo, PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import * as browserBuffer from "buffer";
 import chalk from "chalk";
 import { encode } from "js-base64";
@@ -10,21 +9,21 @@ import {
   sleep,
 } from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
-import { IEnvPublicKeys, MultisigContext } from "../types";
+import { MultisigContext } from "../types";
 
 /// create configured multisig tx
 export async function batchCreate(
-  multisigProg: Program,
-  accounts: IEnvPublicKeys,
+  ctx: MultisigContext,
   proposals: ProposalBase[]
 ) {
+  const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
   const proposerPubkey = multisigProg.provider.wallet.publicKey;
   const txPubkeys = proposals.map((p) => p.calcTransactionAccount().publicKey);
   const multipleAccounts =
     await multisigProg.provider.connection.getMultipleAccountsInfo(txPubkeys);
   const multisigState: any = await multisigProg.account.multisig.fetch(
-    accounts.multisig
+    ctx.multisig
   );
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState);
   for (let i = 0; i < proposals.length; i++) {
@@ -38,22 +37,13 @@ export async function batchCreate(
       );
       continue;
     }
-    await createTx(
-      {
-        multisigProg: multisigProg,
-        multisigPDA: accounts.multisigSigner,
-      },
-      proposerPubkey,
-      accounts.multisig,
-      prop
-    );
+    await createTx(ctx, proposerPubkey, prop);
   }
 }
 
 async function createTx(
   ctx: MultisigContext,
   proposerPubkey: PublicKey,
-  multisigPubkey: PublicKey,
   proposal: ProposalBase
 ) {
   const transaction = proposal.calcTransactionAccount();
@@ -80,7 +70,7 @@ async function createTx(
     ix.data,
     {
       accounts: {
-        multisig: multisigPubkey,
+        multisig: ctx.multisig,
         transaction: transaction.publicKey,
         proposer: proposerPubkey,
         rent: SYSVAR_RENT_PUBKEY,

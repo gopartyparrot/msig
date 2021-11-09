@@ -8,16 +8,12 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { readFileSync } from "fs";
-import { ENV } from "./env";
 import { ProposalBase } from "./instructions/ProposalBase";
-import {
-  IEnvPublicKeys,
-  MultisigStruct,
-  MultisigTransactionStruct,
-} from "./types";
+import { MultisigStruct, MultisigTransactionStruct } from "./types";
 import util from "util";
 
 import multisigIdl from "./serum_multisig_idl.json";
+import { IEnv, MultisigContext } from ".";
 
 export function printKeys(keys: Array<AccountMeta>) {
   const bs = (b: boolean): string => (b ? "y" : "n"); //bool string
@@ -62,22 +58,16 @@ export function buildMultisigProgram(
   return new Program(multisigIdl as any, multisigProgramId, provider);
 }
 
-export function getWalletFromEnv(): Keypair {
+export function getWalletFromFile(path: string): Keypair {
   return Keypair.fromSecretKey(
-    Buffer.from(
-      JSON.parse(
-        readFileSync(ENV.wallet, {
-          encoding: "utf-8",
-        })
-      )
-    )
+    Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" })))
   );
 }
-export function getProgramFromEnv(): Program {
+export function getProgramFromEnv(ev: IEnv): Program {
   return buildMultisigProgram(
-    ENV.rpcUrl,
-    ENV.multisigProgram,
-    getWalletFromEnv()
+    ev.rpcUrl,
+    ev.multisigProgram,
+    getWalletFromFile(ev.wallet)
   );
 }
 
@@ -92,15 +82,14 @@ export async function findMultisigSigner(
   return multisigSigner;
 }
 
-export async function getEnvPublicKeys(
+export async function getMultisigContext(
+  program: Program,
   multisigAddress: PublicKey
-): Promise<IEnvPublicKeys> {
+): Promise<MultisigContext> {
   return {
+    multisigProg: program,
     multisig: multisigAddress,
-    multisigSigner: await findMultisigSigner(
-      ENV.multisigProgram,
-      multisigAddress
-    ),
+    multisigPDA: await findMultisigSigner(program.programId, multisigAddress),
   };
 }
 

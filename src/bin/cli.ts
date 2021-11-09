@@ -2,16 +2,32 @@
 
 import * as packageJSON from "../../package.json";
 import { Command } from "commander";
-import { getEnvPublicKeys, getProgramFromEnv, setupJSONPrint } from "../utils";
+import {
+  getMultisigContext,
+  getProgramFromEnv,
+  setupJSONPrint,
+} from "../utils";
 import { batchCreate } from "../commands/batchCreate";
 import { batchVerify } from "../commands/batchVerify";
 import { batchApproveExecuteProposals } from "../commands/batchApproveExecute";
-import { ENV } from "../env";
 import { createMultisig } from "../commands/setupMultisig";
 import { join } from "path";
 import { IProposals } from "../types";
+import { inspectMultisig } from "../commands/inspectMultisig";
+import { PublicKey } from "@solana/web3.js";
+import { homedir } from "os";
 
 setupJSONPrint();
+
+let ENV = {
+  multisigProgram: new PublicKey(
+    process.env.MULTISIG_PROGRAM ||
+      "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"
+  ),
+  wallet: process.env.WALLET || join(homedir(), ".config/solana/id.json"),
+  rpcUrl: process.env.RPC_URL || "https://api.devnet.solana.com",
+};
+
 let cli = new Command();
 
 cli.version(packageJSON.version);
@@ -38,7 +54,7 @@ cli
       if (owners.length < 2 || owners.length < parseInt(threshold)) {
         throw Error("at least 2 members and threshold >= owners.length");
       }
-      createMultisig(getProgramFromEnv(), parseInt(threshold), owners);
+      createMultisig(getProgramFromEnv(ENV), parseInt(threshold), owners);
     }
   );
 
@@ -49,8 +65,7 @@ cli
   .action(async (proposals: string, opts: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
     await batchCreate(
-      getProgramFromEnv(),
-      await getEnvPublicKeys(rProposals.multisig),
+      await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions
     );
   });
@@ -63,8 +78,7 @@ cli
   .action(async (proposals: string, args: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
     await batchVerify(
-      getProgramFromEnv(),
-      await getEnvPublicKeys(rProposals.multisig),
+      await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
       args.more
     );
@@ -80,13 +94,18 @@ cli
   .action(async (proposals: string, args: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
     await batchApproveExecuteProposals(
-      getProgramFromEnv(),
-      await getEnvPublicKeys(rProposals.multisig),
+      await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
       args.more
     );
   });
 
-cli.parse(process.argv);
+cli
+  .command("info")
+  .argument("<multisig>", "multisig address")
+  .description("print multisig info")
+  .action(async (multisig: string) => {
+    await inspectMultisig(getProgramFromEnv(ENV), new PublicKey(multisig));
+  });
 
-//TODO: inspect multisig
+cli.parse(process.argv);

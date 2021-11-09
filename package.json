@@ -1,6 +1,6 @@
 {
   "name": "@parrotfi/msig",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "serum multisig cli",
   "type": "commonjs",
   "main": "lib/src/index.js",
@@ -14,6 +14,7 @@
     "test:create": "jest --testTimeout 500000 src/__tests__/create.spec.ts",
     "test:verify": "jest --testTimeout 500000 src/__tests__/verify.spec.ts",
     "test:approve": "jest --testTimeout 500000 src/__tests__/execute.spec.ts",
+    "test:inspect": "jest --testTimeout 500000 src/__tests__/inspect.spec.ts",
     "report:coverage": "npm run test:coverage && codecov",
     "pub": "rm -rf lib && tsc && npm publish --access public"
   },

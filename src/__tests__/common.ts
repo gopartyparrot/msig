@@ -10,7 +10,7 @@ import { buildMultisigProgram, findMultisigSigner } from "../utils";
 import { ProposalBase } from "../instructions/ProposalBase";
 import { TokenMintToOwner } from "../instructions/TokenMintToOwner";
 import { TransferTokenToOwner } from "../instructions/TransferTokenToOwner";
-import { ENV } from "../env";
+import { MultisigSetOwnersAndChangeThreshold } from "../instructions/MultisigSetOwnersAndChangeThreshold";
 
 export const TEST_KEYS = {
   memberA: Keypair.fromSecretKey(
@@ -86,6 +86,15 @@ export const testProposals: ProposalBase[] = [
     },
     new u64(100)
   ),
+
+  new MultisigSetOwnersAndChangeThreshold(
+    "2021-11-09T11:25:33+08:00, transfer owner(unchanged)",
+    [
+      new PublicKey(TEST_KEYS.memberA.publicKey.toBase58()),
+      new PublicKey(TEST_KEYS.memberB.publicKey.toBase58()),
+    ],
+    2
+  ),
 ];
 
 export async function ensureDevnetEnv(program: Program, signer: Keypair) {
@@ -135,6 +144,10 @@ export async function ensureDevnetEnv(program: Program, signer: Keypair) {
   }
 }
 
-export function getProgramFromEnvWithWallet(wallet: Keypair): Program {
-  return buildMultisigProgram(ENV.rpcUrl, ENV.multisigProgram, wallet);
+export function getDevnetProgramFromEnvWithWallet(wallet: Keypair): Program {
+  return buildMultisigProgram(
+    "https://api.devnet.solana.com",
+    new PublicKey("msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"),
+    wallet
+  );
 }

@@ -9,6 +9,6 @@
   "dependencies": {
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.30.2",
-    "@parrotfi/msig": "^1.0.1"
+    "@parrotfi/msig": "^1.0.2"
   }
 }
