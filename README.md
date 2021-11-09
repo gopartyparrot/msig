@@ -2,15 +2,9 @@
 
 Parrot's multisig workflow
 
-- make it easier to audit instruction data and account inputs using a whitelist
-- make it easy to verify and approve multiple multisig transactions at once
-- extend the multisig workflow with application specific instructions
-
-# Install The CLI Tool
-
-```
-yarn global add @parrotfi/msig
-```
+- makes it easier to audit instruction data and account inputs using a whitelist
+- makes it easy to verify and approve multiple multisig transactions at once
+- extends the multisig workflow with application specific instructions
 
 # Tutorial
 
