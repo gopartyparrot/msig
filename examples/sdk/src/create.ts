@@ -2,7 +2,7 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   buildMultisigProgram,
   batchCreate,
-  getEnvPublicKeys,
+  getMultisigContext,
 } from "@parrotfi/msig";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -27,8 +27,7 @@ async function createProposals() {
   );
 
   await batchCreate(
-    program,
-    await getEnvPublicKeys(accounts.multisig),
+    await getMultisigContext(program, accounts.multisig),
     PROPOSALS
   );
 }

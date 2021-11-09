@@ -1,8 +1,8 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   buildMultisigProgram,
-  getEnvPublicKeys,
   batchApproveExecuteProposals,
+  getMultisigContext,
 } from "@parrotfi/msig";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -27,8 +27,7 @@ async function approveProposals() {
   );
 
   await batchApproveExecuteProposals(
-    program,
-    await getEnvPublicKeys(accounts.multisig),
+    await getMultisigContext(program, accounts.multisig),
     PROPOSALS,
     true
   );

@@ -28,6 +28,10 @@ let ENV = {
   rpcUrl: process.env.RPC_URL || "https://api.devnet.solana.com",
 };
 
+function printEnv() {
+  console.log("used env:", ENV);
+}
+
 let cli = new Command();
 
 cli.version(packageJSON.version);
@@ -54,6 +58,7 @@ cli
       if (owners.length < 2 || owners.length < parseInt(threshold)) {
         throw Error("at least 2 members and threshold >= owners.length");
       }
+      printEnv();
       createMultisig(getProgramFromEnv(ENV), parseInt(threshold), owners);
     }
   );
@@ -64,6 +69,7 @@ cli
   .argument("[proposals]", "proposal js file", "proposals.js")
   .action(async (proposals: string, opts: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
+    printEnv();
     await batchCreate(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions
@@ -77,6 +83,7 @@ cli
   .option("-m, --more", "verbose print", false)
   .action(async (proposals: string, args: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
+    printEnv();
     await batchVerify(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
@@ -93,6 +100,7 @@ cli
   .option("-m, --more", "verbose print", false)
   .action(async (proposals: string, args: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
+    printEnv();
     await batchApproveExecuteProposals(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,

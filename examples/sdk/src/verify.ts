@@ -1,10 +1,9 @@
 import { Keypair, PublicKey } from "@solana/web3.js";
 import {
   buildMultisigProgram,
-  batchCreate,
-  getEnvPublicKeys,
   batchVerify,
   setupJSONPrint,
+  getMultisigContext,
 } from "@parrotfi/msig";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -29,8 +28,7 @@ async function verifyProposals() {
   );
 
   await batchVerify(
-    program,
-    await getEnvPublicKeys(accounts.multisig),
+    await getMultisigContext(program, accounts.multisig),
     PROPOSALS,
     true
   );
