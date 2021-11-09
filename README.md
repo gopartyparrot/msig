@@ -1,95 +1,87 @@
-# usage
+## Install
 
-## quick experience using tests code (on devnet )
+`npm add @parrotfi/msig`
 
-a 2/3 multisig already exists on devnet, keys in [`src/__tests__/keys.ts`](src/__tests__/keys.ts)
+## Use as cli
 
-```bash
+[`./examples/cli`](./examples/cli)
 
-npm install
+## Use as sdk
 
-cp src/knownAccounts.example.ts src/knownAccounts.ts #fix compile error
+[`./examples/sdk`](./examples/sdk)
 
-# you can run all commands  multiple times, it's safe
+## Config
 
-# create multisig
-# since multisig on devnet already created, this action wont do anything actually
-# if you still want to create a new multisig, modify TEST_KEYS in `src/__tests__/keys` and `src/__tests__/knownAccounts.ts`
-jest --testTimeout 500000 src/__tests__/createMultisig.spec.ts
+For global options, command line options are used first then env value.
 
+```
+msig --help
 
-# modify memo (current memo in this repo has been used) in `src/__tests__/proposals.ts`, better to modify time
-
-# create multisig proposals with memberA
-jest --testTimeout 500000 src/__tests__/create.spec.ts
-
-# verify created proposals with memberB
-jest --testTimeout 500000 src/__tests__/verify.spec.ts
-
-# approve + execute transaction with memberB
-jest --testTimeout 500000 src/__tests__/execute.spec.ts
+--rpc RPC_URL (default: https://api.devnet.solana.com)
+--wallet WALLET wallet file (default ./id.json)
+--program MULTISIG_PROGRAM multisig program
 ```
 
-## quick experience using cli (on devnet)
+env:
 
-```bash
-cp .env.example .env
-touch id.json
-vi id.json #use memberA in `src/__tests__/keys.ts
-
-cp src/knownAccounts.example.ts src/knownAccounts.ts
-
-# then modify memo in `src/proposals.ts`
-
-# create multisig transactions
-npm start create
-
-# switch to memberB
-vi id.json #use memberB in `src/__tests__/keys.ts
-
-# verify with memberB, proposals should passed
-npm start verify -- --more
-
-# approve and execute proposals
-npm start execute -- --more
+```env
+MULTISIG_PROGRAM=
+RPC_RUL=
+WALLET=
 ```
 
-## create your multisig
+## Create your multisig
 
 use multisig-ui: https://github.com/project-serum/multisig-ui
 
-use cli: `npm start new -- --owners memberAPublicKey,memberBPublicKey --threshold 2`
+use cli: `msig setup --owners memberAPublicKey memberBPublicKey --threshold 2`
 
-## execute instructions using multisig:
-
-prepare:
+## Execute instructions using multisig:
 
 ```bash
-cp .env.example .env
-# modify your config .env
 
-# prepare your knownAccounts
-cp src/knownAccounts.example.ts src/knownAccounts.ts
-```
+# create multisig transaction
+msig create [proposals.js]
 
-create multisig transaction from proposals:
-
-```bash
-# create multisig transactions
-npm start create
-```
-
-approve + execute:
-
-```bash
 # verify created proposals
-npm start verify -- --more
+msig verify [proposals.js] [--more]
 
-# approve and execute proposals
-npm start execute -- --more
+# approve + execute
+msig approve [proposals.js] [--more]
 ```
 
-**NOTICE**:
+## Custom instruction
 
-- **don't** submit your `src/knownAccounts.ts` to git
-- **don't** submit your private key to git
+```typescript
+import { Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+import { ProposalBase } from "@parrotfi/msig";
+
+// extends ProposalBase
+export class CustomTokenBurn extends ProposalBase {
+  constructor(
+    public memo: string,
+    public accounts: {
+      mint: PublicKey;
+      burnFrom: PublicKey;
+    },
+    public amount: u64
+  ) {
+    super(memo, accounts); //has memo and accounts
+  }
+
+  // implement createInstr
+  async createInstr(ctx) {
+    return {
+      multisigInstr: Token.createBurnInstruction(
+        TOKEN_PROGRAM_ID,
+        this.accounts.mint,
+        this.accounts.burnFrom,
+        ctx.multisigPDA,
+        [],
+        this.amount
+      ),
+    };
+  }
+}
+```

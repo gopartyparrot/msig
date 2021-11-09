@@ -29,10 +29,7 @@ export async function batchCreate(
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState);
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i];
-    if (
-      multipleAccounts[i] &&
-      (multipleAccounts[i] as AccountInfo<Buffer>).lamports > 0
-    ) {
+    if (multipleAccounts[i] && multipleAccounts[i].lamports > 0) {
       console.log(
         chalk.green(`ALREADY CREATED: `),
         prop.memo,

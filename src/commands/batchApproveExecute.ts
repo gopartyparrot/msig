@@ -106,7 +106,6 @@ async function approveExecute(
           transaction: txKeypair.publicKey,
           owner: proposerPubkey,
         },
-        // signers: [signer]
       })
     );
   }
