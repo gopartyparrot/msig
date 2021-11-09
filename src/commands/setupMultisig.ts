@@ -6,7 +6,7 @@ export async function createMultisig(
   multisigProgram: Program,
   threshold: number,
   members: string[],
-  multisig?: Keypair
+  multisig?: Keypair,
 ) {
   const owners = members.map((m) => new PublicKey(m));
   assert(owners.length >= threshold, "threshold must gt owners.length");
@@ -23,7 +23,7 @@ export async function createMultisig(
 
   const [multisigSigner, nonce] = await PublicKey.findProgramAddress(
     [multisig.publicKey.toBuffer()],
-    multisigProgram.programId
+    multisigProgram.programId,
   );
 
   const txid = await multisigProgram.rpc.createMultisig(
@@ -38,16 +38,14 @@ export async function createMultisig(
       instructions: [
         await multisigProgram.account.multisig.createInstruction(
           multisig,
-          multisigSize
+          multisigSize,
         ),
       ],
       signers: [multisig],
-    }
+    },
   );
   console.log("txid:", txid);
-  console.log(
-    "msig wallet address (⚠️⚠️⚠️ don't send tokens to this address ⚠️⚠️⚠️):"
-  );
+  console.log("msig wallet address (don't send tokens to this address):");
   console.log(multisig.publicKey.toBase58());
   console.log("msig wallet PDA (send tokens here):");
   console.log(multisigSigner.toBase58());

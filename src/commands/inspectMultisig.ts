@@ -4,15 +4,15 @@ import { findMultisigSigner, MultisigStruct } from "..";
 
 export async function inspectMultisig(
   multisigProgram: Program,
-  multisig: PublicKey
+  multisig: PublicKey,
 ) {
   const state: MultisigStruct = (await multisigProgram.account.multisig.fetch(
-    multisig
+    multisig,
   )) as MultisigStruct;
   console.log(
     "multisig:",
     multisig.toBase58(),
-    `(⚠️⚠️⚠️ don't send tokens to this address ⚠️⚠️⚠️)`
+    `(don't send tokens to this address)`,
   );
   console.log("threshold:", state.threshold.toString());
   console.log("ownerSetSeqno:", state.ownerSetSeqno);

@@ -14,24 +14,24 @@ import { MultisigContext, MultisigTransactionStruct } from "../types";
 export async function batchVerify(
   ctx: MultisigContext,
   proposals: ProposalBase[],
-  verbose: boolean
+  verbose: boolean,
 ) {
   const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
   const chainTransactions = await fetchProposalsChainStates(
     multisigProg,
-    proposals
+    proposals,
   );
 
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i];
     const chainTx = chainTransactions[i];
     if (chainTx == null) {
-      console.log(prop.memo, chalk.yellow(` not created, skip verify`));
+      console.log(prop.memo, chalk.yellow(`not yet created, skip verify`));
       continue;
     }
     if (chainTx.data.didExecute) {
-      console.log(prop.memo, chalk.grey(` did executed, skip verify`));
+      console.log(prop.memo, chalk.grey(`already executed, skip verify`));
       continue;
     }
     await verify(ctx, prop, chainTx.data, verbose);
@@ -42,7 +42,7 @@ export async function verify(
   ctx: MultisigContext,
   proposal: ProposalBase,
   chainTxState: MultisigTransactionStruct,
-  verbose: boolean
+  verbose: boolean,
 ) {
   const tx = proposal.calcTransactionAccount().publicKey;
   console.log(`=======>> verify ${proposal.memo} ${tx.toBase58()}`);
@@ -53,7 +53,7 @@ export async function verify(
     printKeys(chainTxState.accounts);
     console.log(
       "local created instr in base64(should same as UI): ",
-      encode(browserBuffer.Buffer.from(ix.data).toString())
+      encode(browserBuffer.Buffer.from(ix.data).toString()),
     );
   }
   console.log(chalk.green(` PASSED`));

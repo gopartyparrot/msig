@@ -14,18 +14,24 @@ export class TransferTokenToOwner extends ProposalBase {
   constructor(
     public memo: string,
     public accounts: {
-      source: PublicKey;
+      mint: PublicKey;
+      // source: PublicKey;
       toOwner: PublicKey;
     },
-    public amount: u64
+    public amount: u64,
   ) {
     super(memo, accounts);
   }
 
   async createInstr(ctx: MultisigContext): Promise<TransactionInstructionExt> {
-    const mint = await this.getTokenAccountMint(
-      ctx.multisigProg.provider.connection,
-      this.accounts.source
+    const mint = this.accounts.mint;
+
+    const fromAssociatedTokenAddress = await Token.getAssociatedTokenAddress(
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID,
+      mint,
+      ctx.multisigPDA,
+      true,
     );
 
     const toAssociatedTokenAddress = await Token.getAssociatedTokenAddress(
@@ -33,20 +39,20 @@ export class TransferTokenToOwner extends ProposalBase {
       TOKEN_PROGRAM_ID,
       mint,
       this.accounts.toOwner,
-      true
+      true,
     );
     const ret: TransactionInstructionExt = {
       multisigInstr: Token.createTransferInstruction(
         TOKEN_PROGRAM_ID,
-        this.accounts.source,
+        fromAssociatedTokenAddress,
         toAssociatedTokenAddress,
         ctx.multisigPDA,
         [],
-        this.amount
+        this.amount,
       ),
     };
     const solBalance = await ctx.multisigProg.provider.connection.getBalance(
-      toAssociatedTokenAddress
+      toAssociatedTokenAddress,
     );
     if (solBalance === 0) {
       ret.prepare = {
@@ -57,7 +63,7 @@ export class TransferTokenToOwner extends ProposalBase {
             mint,
             toAssociatedTokenAddress,
             this.accounts.toOwner,
-            ctx.multisigProg.provider.wallet.publicKey
+            ctx.multisigProg.provider.wallet.publicKey,
           ),
         ],
       };
@@ -67,7 +73,7 @@ export class TransferTokenToOwner extends ProposalBase {
 
   async getTokenAccountMint(
     conn: Connection,
-    tokenAcc: PublicKey
+    tokenAcc: PublicKey,
   ): Promise<PublicKey> {
     const info = await conn.getAccountInfo(tokenAcc, "confirmed");
     if (!info) {

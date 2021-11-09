@@ -14,7 +14,7 @@ import { MultisigContext } from "../types";
 /// create configured multisig tx
 export async function batchCreate(
   ctx: MultisigContext,
-  proposals: ProposalBase[]
+  proposals: ProposalBase[],
 ) {
   const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
@@ -23,7 +23,7 @@ export async function batchCreate(
   const multipleAccounts =
     await multisigProg.provider.connection.getMultipleAccountsInfo(txPubkeys);
   const multisigState: any = await multisigProg.account.multisig.fetch(
-    ctx.multisig
+    ctx.multisig,
   );
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState);
   for (let i = 0; i < proposals.length; i++) {
@@ -33,7 +33,7 @@ export async function batchCreate(
         chalk.green(`ALREADY CREATED: `),
         prop.memo,
         chalk.grey(" => "),
-        prop.calcTransactionAccount().publicKey.toBase58()
+        prop.calcTransactionAccount().publicKey.toBase58(),
       );
       continue;
     }
@@ -44,24 +44,22 @@ export async function batchCreate(
 async function createTx(
   ctx: MultisigContext,
   proposerPubkey: PublicKey,
-  proposal: ProposalBase
+  proposal: ProposalBase,
 ) {
   const transaction = proposal.calcTransactionAccount();
   const instrs = await proposal.createInstr(ctx);
   const ix = instrs.multisigInstr;
 
   console.log(
-    "will create tx for: ",
+    "create tx: ",
     transaction.publicKey.toBase58(),
-    JSON.stringify(proposal, null, "  ")
+    JSON.stringify(proposal, null, "  "),
   );
   printKeys(ix.keys);
   console.log(
     "local created instr in base64(should same as UI): ",
-    encode(browserBuffer.Buffer.from(ix.data).toString())
+    encode(browserBuffer.Buffer.from(ix.data).toString()),
   );
-  console.log("you have 10s to check instruction");
-  await sleep(10 * 1000);
 
   const txSize = 100 + 34 * ix.keys.length + ix.data.length;
   const txid = await ctx.multisigProg.rpc.createTransaction(
@@ -79,11 +77,11 @@ async function createTx(
         ...(instrs.prepare?.instructions || []),
         await (ctx.multisigProg.account.transaction.createInstruction as any)(
           transaction,
-          txSize
+          txSize,
         ),
       ],
       signers: [...(instrs.prepare?.signers || []), transaction],
-    }
+    },
   );
   console.log("create multisig txid:", txid);
 }
