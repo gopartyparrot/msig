@@ -2,7 +2,7 @@ import { BN, Program } from "@project-serum/anchor";
 import { Keypair, PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import assert from "assert";
 
-export async function createMultisig(
+export async function setupMultisig(
   multisigProgram: Program,
   threshold: number,
   members: string[],

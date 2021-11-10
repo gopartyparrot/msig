@@ -1,6 +1,6 @@
 import { BN } from "@project-serum/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { ProposalBase } from ".";
+import { ProposalBase } from "./ProposalBase";
 import { MultisigContext } from "../types";
 import { TransactionInstructionExt } from "./ProposalBase";
 
@@ -8,7 +8,7 @@ export class MultisigSetOwnersAndChangeThreshold extends ProposalBase {
   constructor(
     public memo: string,
     public owners: PublicKey[],
-    public threshold: number
+    public threshold: number,
   ) {
     super(memo, owners);
   }
@@ -23,7 +23,7 @@ export class MultisigSetOwnersAndChangeThreshold extends ProposalBase {
             multisig: ctx.multisig,
             multisigSigner: ctx.multisigPDA,
           },
-        }
+        },
       );
     return { multisigInstr };
   }

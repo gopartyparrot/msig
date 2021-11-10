@@ -1,5 +1,5 @@
 import { findMultisigSigner, setupJSONPrint } from "../utils";
-import { batchCreate } from "../commands/batchCreate";
+import { batchCreateProposals } from "../commands/batchCreate";
 import {
   getDevnetProgramFromEnvWithWallet,
   testProposals,
@@ -14,16 +14,16 @@ describe("create proposals", () => {
 
     const multisigPDA = await findMultisigSigner(
       program.programId,
-      TEST_KEYS.multisig.publicKey
+      TEST_KEYS.multisig.publicKey,
     );
 
-    await batchCreate(
+    await batchCreateProposals(
       {
         multisigProg: program,
         multisig: TEST_KEYS.multisig.publicKey,
         multisigPDA,
       },
-      testProposals
+      testProposals,
     );
   });
 });

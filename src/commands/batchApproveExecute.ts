@@ -1,4 +1,3 @@
-import { Program } from "@project-serum/anchor";
 import {
   PublicKey,
   Transaction,
@@ -22,14 +21,15 @@ import { verify } from "./batchVerify";
 export async function batchApproveExecuteProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
-  verbose: boolean
+  skipExecute: boolean,
+  verbose: boolean,
 ) {
   const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
   const proposerPubkey = multisigProg.provider.wallet.publicKey;
   const chainTransactions = await fetchProposalsChainStates(
     multisigProg,
-    proposals
+    proposals,
   );
 
   const multisigState: MultisigStruct =
@@ -51,10 +51,15 @@ export async function batchApproveExecuteProposals(
     }
 
     const currentSignerIndex = multisigState.owners.findIndex((x) =>
-      x.equals(proposerPubkey)
+      x.equals(proposerPubkey),
     );
     const isCurrentProposerApproved = chainTx.data.signers[currentSignerIndex];
     const approvedCount = chainTx.data.signers.filter((x) => x).length;
+
+    let needExecute = skipExecute
+      ? false
+      : multisigState.threshold - approvedCount ===
+        (isCurrentProposerApproved ? 0 : 1);
 
     await approveExecute(
       ctx,
@@ -63,11 +68,9 @@ export async function batchApproveExecuteProposals(
       proposerPubkey,
       {
         needApprove: !isCurrentProposerApproved,
-        needExecute:
-          multisigState.threshold - approvedCount ===
-          (isCurrentProposerApproved ? 0 : 1),
+        needExecute,
       },
-      verbose
+      verbose,
     );
   }
 }
@@ -81,10 +84,14 @@ async function approveExecute(
     needApprove: boolean;
     needExecute: boolean;
   },
-  verbose: boolean
+  verbose: boolean,
 ) {
   if (!options.needApprove && !options.needExecute) {
-    console.log(chalk.red("you have approved, and more approves wanted"));
+    console.log(
+      chalk.red(
+        "you have approved, execute skipped (more approves wanted or with --skip-exec)",
+      ),
+    );
     return;
   }
   await verify(ctx, proposal, chainTxState, verbose); //verify first
@@ -99,7 +106,7 @@ async function approveExecute(
           transaction: txKeypair.publicKey,
           owner: proposerPubkey,
         },
-      })
+      }),
     );
   }
   if (options.needExecute) {
@@ -122,11 +129,11 @@ async function approveExecute(
             isWritable: false,
             isSigner: false,
           }),
-      })
+      }),
     );
   }
   const txid = await ctx.multisigProg.provider.send(
-    new Transaction().add(...instrs)
+    new Transaction().add(...instrs),
   );
   console.log("execute txid:", txid);
 }

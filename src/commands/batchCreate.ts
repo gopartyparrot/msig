@@ -12,7 +12,7 @@ import { ProposalBase } from "../instructions/ProposalBase";
 import { MultisigContext } from "../types";
 
 /// create configured multisig tx
-export async function batchCreate(
+export async function batchCreateProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
 ) {

@@ -8,10 +8,10 @@ import {
   getWalletFromFile,
   setupJSONPrint,
 } from "../utils";
-import { batchCreate } from "../commands/batchCreate";
-import { batchVerify } from "../commands/batchVerify";
+import { batchCreateProposals } from "../commands/batchCreate";
+import { batchVerifyProposals } from "../commands/batchVerify";
 import { batchApproveExecuteProposals } from "../commands/batchApproveExecute";
-import { createMultisig } from "../commands/setupMultisig";
+import { setupMultisig } from "../commands/setupMultisig";
 import { join } from "path";
 import { IProposals } from "../types";
 import { inspectMultisig } from "../commands/inspectMultisig";
@@ -83,7 +83,7 @@ cli
       if (owners.length < 2 || owners.length < parseInt(threshold)) {
         throw Error("at least 2 members and threshold >= owners.length");
       }
-      createMultisig(getProgramFromEnv(ENV), parseInt(threshold), owners);
+      setupMultisig(getProgramFromEnv(ENV), parseInt(threshold), owners);
     },
   );
 
@@ -93,7 +93,7 @@ cli
   .argument("[proposals]", "proposal js file", "proposals.js")
   .action(async (proposals: string, opts: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
-    await batchCreate(
+    await batchCreateProposals(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
     );
@@ -106,7 +106,7 @@ cli
   .option("-m, --more", "verbose print", false)
   .action(async (proposals: string, args: any) => {
     const rProposals: IProposals = require(join(process.cwd(), proposals));
-    await batchVerify(
+    await batchVerifyProposals(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
       args.more,
@@ -115,20 +115,34 @@ cli
 
 cli
   .command("approve")
-  .argument("[proposals]", "proposal js file", "proposals.js")
   .description(
     "approve and execute created multisig transactions from proposals",
   )
+  .argument("[proposals]", "proposal js file", "proposals.js")
+  .option(
+    "--skip-exec",
+    "don't execute multisig transaction(but will approve)",
+    false,
+  )
   .option("-m, --more", "verbose print", false)
-  .action(async (proposals: string, args: any) => {
-    const rProposals: IProposals = require(join(process.cwd(), proposals));
-    printEnv();
-    await batchApproveExecuteProposals(
-      await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
-      rProposals.transactions,
-      args.more,
-    );
-  });
+  .action(
+    async (
+      proposals: string,
+      args: {
+        more: boolean;
+        skipExec: boolean;
+      },
+    ) => {
+      const rProposals: IProposals = require(join(process.cwd(), proposals));
+      printEnv();
+      await batchApproveExecuteProposals(
+        await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
+        rProposals.transactions,
+        args.skipExec,
+        args.more,
+      );
+    },
+  );
 
 cli
   .command("info")

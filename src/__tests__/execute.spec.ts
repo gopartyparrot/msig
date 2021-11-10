@@ -12,7 +12,7 @@ describe("create proposals", () => {
 
     const multisigPDA = await findMultisigSigner(
       program.programId,
-      TEST_KEYS.multisig.publicKey
+      TEST_KEYS.multisig.publicKey,
     );
 
     await batchApproveExecuteProposals(
@@ -22,7 +22,8 @@ describe("create proposals", () => {
         multisigPDA,
       },
       testProposals,
-      true
+      false,
+      true,
     );
   });
 });

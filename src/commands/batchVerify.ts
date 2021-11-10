@@ -1,4 +1,3 @@
-import { Program } from "@project-serum/anchor";
 import * as browserBuffer from "buffer";
 import chalk from "chalk";
 import { encode } from "js-base64";
@@ -11,7 +10,7 @@ import { ProposalBase } from "../instructions/ProposalBase";
 import { MultisigContext, MultisigTransactionStruct } from "../types";
 
 /// verify configured multisig tx
-export async function batchVerify(
+export async function batchVerifyProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
   verbose: boolean,

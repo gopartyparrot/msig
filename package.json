@@ -1,6 +1,6 @@
 {
   "name": "@parrotfi/msig",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "serum multisig cli",
   "type": "commonjs",
   "main": "lib/src/index.js",
@@ -30,6 +30,7 @@
     "@project-serum/anchor": "^0.14.0",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.30.2",
+    "chalk": "^4.1.2",
     "commander": "^8.2.0",
     "dotenv": "^10.0.0",
     "js-base64": "^3.7.2",

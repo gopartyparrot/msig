@@ -1,6 +1,6 @@
 import { Program } from "@project-serum/anchor";
 import { AccountMeta, PublicKey } from "@solana/web3.js";
-import { ProposalBase } from "./instructions";
+import { ProposalBase } from "./instructions/ProposalBase";
 
 export type NamedPubkey = { [key: string]: PublicKey | PublicKey[] };
 
