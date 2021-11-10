@@ -15,21 +15,22 @@ async function approveProposals() {
       JSON.parse(
         readFileSync(join(__dirname, "../../b.json"), {
           encoding: "utf-8",
-        })
-      )
-    )
+        }),
+      ),
+    ),
   );
 
   const program = buildMultisigProgram(
     "https://api.devnet.solana.com",
     new PublicKey("msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"),
-    wallet
+    wallet,
   );
 
   await batchApproveExecuteProposals(
     await getMultisigContext(program, accounts.multisig),
     PROPOSALS,
-    true
+    false,
+    true,
   );
 }
 

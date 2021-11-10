@@ -18,16 +18,16 @@ export const PROPOSALS: ProposalBase[] = [
       mint: accounts.testTokenMint,
       owner: accounts.multisigPDA,
     },
-    new u64(1000)
+    new u64(1000),
   ),
 
   new TransferTokenToOwner(
     "2021-11-08T20:10:17+08:00 transfer some test token to memberA from multisig token account 1", //FIXME: to run the example you need to modify proposal memo
     {
-      source: accounts.associatedMultisigTestTokenAccount,
+      mint: accounts.testTokenMint,
       toOwner: accounts.memberA,
     },
-    new u64(100)
+    new u64(100),
   ),
 
   new CustomTokenBurn(
@@ -36,7 +36,7 @@ export const PROPOSALS: ProposalBase[] = [
       mint: accounts.testTokenMint,
       burnFrom: accounts.associatedMultisigTestTokenAccount,
     },
-    new u64(2)
+    new u64(2),
   ),
 ];
 
