@@ -148,7 +148,7 @@ export function ensureProposalsMemoUnique(proposals: ProposalBase[]) {
  * this function try to avoid this by convert public key to base58 string
  */
 export function betterPrintObjectWithPublicKey(obj) {
-  console.log(JSON.stringify(betterPublicKeyJSONObject(obj)), null, "  ");
+  console.log(JSON.stringify(betterPublicKeyJSONObject(obj), null, "  "));
 }
 
 function betterPublicKeyJSONObject(obj) {

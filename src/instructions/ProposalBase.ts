@@ -15,12 +15,12 @@ import {
 export abstract class ProposalBase {
   constructor(
     public memo: string,
-    public accounts: NamedPubkey | PublicKey[] //used to create instruction
+    public accounts: NamedPubkey | PublicKey[], //used to create instruction
   ) {}
 
   public calcAccountWithSeed(seed: string): Keypair {
     return Keypair.fromSeed(
-      nacl.hash(Uint8Array.from(Buffer.from(seed))).slice(0, 32)
+      nacl.hash(Uint8Array.from(Buffer.from(seed))).slice(0, 32),
     );
   }
 
@@ -32,13 +32,15 @@ export abstract class ProposalBase {
   // throw error if verify failed
   public async verifyTx(
     ctx: MultisigContext,
-    chainTxState: MultisigTransactionStruct
+    chainTxState: MultisigTransactionStruct,
   ) {
     const instrs = await this.createInstr(ctx);
     const multisigInstr = instrs.multisigInstr;
 
     if (multisigInstr.keys.length != chainTxState.accounts.length) {
-      throw Error(`verify failed, accounts length not match`);
+      throw Error(
+        `verify failed, accounts length not match, local: ${multisigInstr.keys.length}, chain: ${chainTxState.accounts.length}`,
+      );
     }
     for (let i = 0; i < multisigInstr.keys.length; i++) {
       if (
@@ -58,7 +60,7 @@ export abstract class ProposalBase {
 
   // use deterministic address (calculated from memo string)
   abstract createInstr(
-    ctx: MultisigContext
+    ctx: MultisigContext,
   ): Promise<TransactionInstructionExt>;
 }
 

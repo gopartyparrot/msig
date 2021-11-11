@@ -92,6 +92,19 @@ async function createTx(
     );
     console.log("prepare txid:", prepareTxid);
 
+    for (;;) {
+      console.log("check transaction account created successfully");
+      const transactionAccountSolBalance =
+        await ctx.multisigProg.provider.connection.getBalance(
+          transaction.publicKey,
+        );
+      if (transactionAccountSolBalance > 0) {
+        console.log("wait 3s to ensure transaction created");
+        await sleep(3 * 1000);
+        break;
+      }
+    }
+
     //then send create multisig transaction instruction
     const txid = await ctx.multisigProg.rpc.createTransaction(
       ix.programId,
