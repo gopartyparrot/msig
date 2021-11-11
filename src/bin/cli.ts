@@ -91,13 +91,26 @@ cli
   .command("create")
   .description("create multisig transactions from proposals")
   .argument("[proposals]", "proposal js file", "proposals.js")
-  .action(async (proposals: string, opts: any) => {
-    const rProposals: IProposals = require(join(process.cwd(), proposals));
-    await batchCreateProposals(
-      await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
-      rProposals.transactions,
-    );
-  });
+  .option(
+    "--small-tx",
+    "will send create multisig instruction separately apart from prepare instruction (to avoid error: Transaction too large)",
+    false,
+  )
+  .action(
+    async (
+      proposals: string,
+      opts: {
+        smallTx: boolean;
+      },
+    ) => {
+      const rProposals: IProposals = require(join(process.cwd(), proposals));
+      await batchCreateProposals(
+        await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
+        rProposals.transactions,
+        opts.smallTx,
+      );
+    },
+  );
 
 cli
   .command("verify")

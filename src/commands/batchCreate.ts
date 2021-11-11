@@ -1,4 +1,4 @@
-import { PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { PublicKey, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
 import * as browserBuffer from "buffer";
 import chalk from "chalk";
 import { encode } from "js-base64";
@@ -15,7 +15,12 @@ import { MultisigContext } from "../types";
 export async function batchCreateProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
+  smallTransaction = false, //if encountered error: Transaction too large, use true
 ) {
+  if (smallTransaction) {
+    console.log("use smallTransaction");
+  }
+
   const multisigProg = ctx.multisigProg;
   ensureProposalsMemoUnique(proposals);
   const proposerPubkey = multisigProg.provider.wallet.publicKey;
@@ -37,7 +42,7 @@ export async function batchCreateProposals(
       );
       continue;
     }
-    await createTx(ctx, proposerPubkey, prop);
+    await createTx(ctx, proposerPubkey, prop, smallTransaction);
   }
 }
 
@@ -45,6 +50,7 @@ async function createTx(
   ctx: MultisigContext,
   proposerPubkey: PublicKey,
   proposal: ProposalBase,
+  smallTransaction: boolean,
 ) {
   const transaction = proposal.calcTransactionAccount();
   const instrs = await proposal.createInstr(ctx);
@@ -62,26 +68,58 @@ async function createTx(
   );
 
   const txSize = 100 + 34 * ix.keys.length + ix.data.length;
-  const txid = await ctx.multisigProg.rpc.createTransaction(
-    ix.programId,
-    ix.keys,
-    ix.data,
-    {
-      accounts: {
-        multisig: ctx.multisig,
-        transaction: transaction.publicKey,
-        proposer: proposerPubkey,
-        rent: SYSVAR_RENT_PUBKEY,
-      },
-      instructions: [
+
+  if (smallTransaction) {
+    //first send prepare instructions
+    const prepareTxid = await ctx.multisigProg.provider.send(
+      new Transaction().add(
         ...(instrs.prepare?.instructions || []),
         await (ctx.multisigProg.account.transaction.createInstruction as any)(
           transaction,
           txSize,
         ),
-      ],
-      signers: [...(instrs.prepare?.signers || []), transaction],
-    },
-  );
-  console.log("create multisig txid:", txid);
+      ),
+      [...(instrs.prepare?.signers || []), transaction],
+    );
+    console.log("prepare txid:", prepareTxid);
+
+    //then send create multisig transaction instruction
+    const txid = await ctx.multisigProg.rpc.createTransaction(
+      ix.programId,
+      ix.keys,
+      ix.data,
+      {
+        accounts: {
+          multisig: ctx.multisig,
+          transaction: transaction.publicKey,
+          proposer: proposerPubkey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+      },
+    );
+    console.log("create multisig txid:", txid);
+  } else {
+    const txid = await ctx.multisigProg.rpc.createTransaction(
+      ix.programId,
+      ix.keys,
+      ix.data,
+      {
+        accounts: {
+          multisig: ctx.multisig,
+          transaction: transaction.publicKey,
+          proposer: proposerPubkey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        instructions: [
+          ...(instrs.prepare?.instructions || []),
+          await (ctx.multisigProg.account.transaction.createInstruction as any)(
+            transaction,
+            txSize,
+          ),
+        ],
+        signers: [...(instrs.prepare?.signers || []), transaction],
+      },
+    );
+    console.log("create multisig txid:", txid);
+  }
 }
