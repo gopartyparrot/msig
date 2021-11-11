@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { encode } from "js-base64";
 import {
   assertProposerIsOwnerOfMultisig,
+  betterPrintObjectWithPublicKey,
   ensureProposalsMemoUnique,
   printKeys,
   sleep,
@@ -15,7 +16,8 @@ import { MultisigContext } from "../types";
 export async function batchCreateProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
-  smallTransaction = false, //if encountered error: Transaction too large, use true
+  smallTransaction: boolean, //if encountered error: Transaction too large, use true
+  drayRun: boolean,
 ) {
   if (smallTransaction) {
     console.log("use smallTransaction");
@@ -42,7 +44,7 @@ export async function batchCreateProposals(
       );
       continue;
     }
-    await createTx(ctx, proposerPubkey, prop, smallTransaction);
+    await createTx(ctx, proposerPubkey, prop, smallTransaction, drayRun);
   }
 }
 
@@ -51,21 +53,28 @@ async function createTx(
   proposerPubkey: PublicKey,
   proposal: ProposalBase,
   smallTransaction: boolean,
+  drayRun: boolean,
 ) {
   const transaction = proposal.calcTransactionAccount();
   const instrs = await proposal.createInstr(ctx);
   const ix = instrs.multisigInstr;
 
-  console.log(
-    "create tx: ",
-    transaction.publicKey.toBase58(),
-    JSON.stringify(proposal, null, "  "),
-  );
+  console.log("create tx: ", transaction.publicKey.toBase58());
+  betterPrintObjectWithPublicKey(proposal);
   printKeys(ix.keys);
   console.log(
     "local created instr in base64(should same as UI): ",
     encode(browserBuffer.Buffer.from(ix.data).toString()),
   );
+
+  if (drayRun) {
+    console.log("multisig instr:");
+    console.log("programId:", ix.programId.toBase58());
+    console.log("data:", ix.data);
+    console.log("accounts:");
+    printKeys(ix.keys);
+    return;
+  }
 
   const txSize = 100 + 34 * ix.keys.length + ix.data.length;
 

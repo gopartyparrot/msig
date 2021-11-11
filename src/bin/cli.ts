@@ -96,11 +96,17 @@ cli
     "will send create multisig instruction separately apart from prepare instruction (to avoid error: Transaction too large)",
     false,
   )
+  .option(
+    "--dry-run",
+    "will not send transaction, just print instructions",
+    false,
+  )
   .action(
     async (
       proposals: string,
       opts: {
         smallTx: boolean;
+        dryRun: boolean;
       },
     ) => {
       const rProposals: IProposals = require(join(process.cwd(), proposals));
@@ -108,6 +114,7 @@ cli
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
         rProposals.transactions,
         opts.smallTx,
+        opts.dryRun,
       );
     },
   );

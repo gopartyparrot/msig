@@ -27,7 +27,7 @@ export function printKeys(keys: Array<AccountMeta>) {
 
 export async function fetchProposalsChainStates(
   multisigProg: Program,
-  proposals: ProposalBase[]
+  proposals: ProposalBase[],
 ): Promise<(AccountInfo<MultisigTransactionStruct> | null)[]> {
   const txPubkeys = proposals.map((p) => p.calcTransactionAccount().publicKey);
   const chainTransactions: (AccountInfo<MultisigTransactionStruct> | null)[] = (
@@ -51,7 +51,7 @@ export function buildMultisigProgram(
   rpc: string,
   multisigProgramId: PublicKey,
   wallet: Keypair,
-  opts = Provider.defaultOptions()
+  opts = Provider.defaultOptions(),
 ): Program {
   const connection = new Connection(rpc, opts.preflightCommitment);
   const provider = new Provider(connection, new NodeWallet(wallet), opts);
@@ -60,31 +60,31 @@ export function buildMultisigProgram(
 
 export function getWalletFromFile(path: string): Keypair {
   return Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" })))
+    Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" }))),
   );
 }
 export function getProgramFromEnv(ev: IEnv): Program {
   return buildMultisigProgram(
     ev.rpcUrl,
     ev.multisigProgram,
-    getWalletFromFile(ev.wallet)
+    getWalletFromFile(ev.wallet),
   );
 }
 
 export async function findMultisigSigner(
   multisigProgram: PublicKey,
-  multisigAddress: PublicKey
+  multisigAddress: PublicKey,
 ): Promise<PublicKey> {
   const [multisigSigner, nonce] = await PublicKey.findProgramAddress(
     [multisigAddress.toBuffer()],
-    multisigProgram
+    multisigProgram,
   );
   return multisigSigner;
 }
 
 export async function getMultisigContext(
   program: Program,
-  multisigAddress: PublicKey
+  multisigAddress: PublicKey,
 ): Promise<MultisigContext> {
   return {
     multisigProg: program,
@@ -95,7 +95,7 @@ export async function getMultisigContext(
 
 export function assertProposerIsOwnerOfMultisig(
   proposerPubkey: PublicKey,
-  multisig: MultisigStruct
+  multisig: MultisigStruct,
 ) {
   for (const owner of multisig.owners) {
     if (owner.equals(proposerPubkey)) {
@@ -138,4 +138,32 @@ export function ensureProposalsMemoUnique(proposals: ProposalBase[]) {
   if (new Set(proposals.map((x) => x.memo)).size != proposals.length) {
     throw Error("duplicated memo for multisig transactions");
   }
+}
+
+/**
+ * console log publicKey like
+ *  ` {
+        "_bn": "83b2e6cdef2e3686db68c8b5b144e7e3bdc8b445eb19fc04aa046b794d11d0bb"
+      },`
+ * this function try to avoid this by convert public key to base58 string
+ */
+export function betterPrintObjectWithPublicKey(obj) {
+  console.log(JSON.stringify(betterPublicKeyJSONObject(obj)), null, "  ");
+}
+
+function betterPublicKeyJSONObject(obj) {
+  const newObject = new Object();
+  for (const key in obj) {
+    const f = obj[key];
+    if (f["toBase58"]) {
+      newObject[key] = f.toBase58();
+      continue;
+    }
+    if (typeof f === "object") {
+      newObject[key] = betterPublicKeyJSONObject(f);
+      continue;
+    }
+    newObject[key] = f;
+  }
+  return newObject;
 }
