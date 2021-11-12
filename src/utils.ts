@@ -155,6 +155,13 @@ function betterPublicKeyJSONObject(obj) {
   const newObject = new Object();
   for (const key in obj) {
     const f = obj[key];
+
+    //for error: TypeError: Cannot read property 'toBase58' of null
+    if (!f) {
+      newObject[key] = obj[key];
+      continue;
+    }
+
     if (f["toBase58"]) {
       newObject[key] = f.toBase58();
       continue;
