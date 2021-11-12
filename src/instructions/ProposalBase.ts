@@ -5,12 +5,14 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 import nacl from "tweetnacl";
+import { fromByteArray } from "base64-js";
 
 import {
   MultisigContext,
   MultisigTransactionStruct,
   NamedPubkey,
 } from "../types";
+import { printKeys } from "../utils";
 
 export abstract class ProposalBase {
   constructor(
@@ -33,6 +35,7 @@ export abstract class ProposalBase {
   public async verifyTx(
     ctx: MultisigContext,
     chainTxState: MultisigTransactionStruct,
+    verbose: boolean,
   ) {
     const instrs = await this.createInstr(ctx);
     const multisigInstr = instrs.multisigInstr;
@@ -55,6 +58,17 @@ export abstract class ProposalBase {
       !multisigInstr.programId.equals(chainTxState.programId)
     ) {
       throw Error("verify failed, programId or instruction data not match");
+    }
+
+    if (verbose) {
+      console.log("multisig instruction:");
+      console.log("program id:", multisigInstr.programId.toBase58());
+      console.log("accounts:");
+      printKeys(multisigInstr.keys);
+      console.log(
+        "local created instr in base64: ",
+        fromByteArray(multisigInstr.data),
+      );
     }
   }
 

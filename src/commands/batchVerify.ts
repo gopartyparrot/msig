@@ -1,6 +1,4 @@
-import * as browserBuffer from "buffer";
 import chalk from "chalk";
-import { encode } from "js-base64";
 import {
   ensureProposalsMemoUnique,
   fetchProposalsChainStates,
@@ -45,15 +43,6 @@ export async function verify(
 ) {
   const tx = proposal.calcTransactionAccount().publicKey;
   console.log(`=======>> verify ${proposal.memo} ${tx.toBase58()}`);
-  await proposal.verifyTx(ctx, chainTxState);
-  if (verbose) {
-    const instrs = await proposal.createInstr(ctx);
-    let ix = instrs.multisigInstr;
-    printKeys(chainTxState.accounts);
-    console.log(
-      "local created instr in base64(should same as UI): ",
-      encode(browserBuffer.Buffer.from(ix.data).toString()),
-    );
-  }
+  await proposal.verifyTx(ctx, chainTxState, verbose);
   console.log(chalk.green(` PASSED`));
 }

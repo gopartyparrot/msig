@@ -1,7 +1,6 @@
 import { PublicKey, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js";
-import * as browserBuffer from "buffer";
 import chalk from "chalk";
-import { encode } from "js-base64";
+import { fromByteArray } from "base64-js";
 import {
   assertProposerIsOwnerOfMultisig,
   betterPrintObjectWithPublicKey,
@@ -62,10 +61,7 @@ async function createTx(
   console.log("create tx: ", transaction.publicKey.toBase58());
   betterPrintObjectWithPublicKey(proposal);
   printKeys(ix.keys);
-  console.log(
-    "local created instr in base64(should same as UI): ",
-    encode(browserBuffer.Buffer.from(ix.data).toString()),
-  );
+  console.log("local created instr in base64: ", fromByteArray(ix.data));
 
   if (drayRun) {
     console.log("multisig instr:");
