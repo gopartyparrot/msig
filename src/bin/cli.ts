@@ -31,6 +31,8 @@ let ENV = {
   wallet: process.env.WALLET || join(homedir(), ".config/solana/id.json"),
   // https://api.testnet.solana.com
   rpcUrl: process.env.RPC_URL || "https://api.mainnet-beta.solana.com",
+
+  proposalDir: process.env.PROPOSAL_DIR || "",
 };
 
 function printEnv() {
@@ -109,7 +111,11 @@ cli
         dryRun: boolean;
       },
     ) => {
-      const rProposals: IProposals = require(join(process.cwd(), proposals));
+      const rProposals: IProposals = require(join(
+        process.cwd(),
+        ENV.proposalDir,
+        proposals,
+      ));
       await batchCreateProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
         rProposals.transactions,
@@ -125,7 +131,11 @@ cli
   .argument("[proposals]", "proposal js file", "proposals.js")
   .option("-m, --more", "verbose print", false)
   .action(async (proposals: string, args: any) => {
-    const rProposals: IProposals = require(join(process.cwd(), proposals));
+    const rProposals: IProposals = require(join(
+      process.cwd(),
+      ENV.proposalDir,
+      proposals,
+    ));
     await batchVerifyProposals(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
@@ -153,7 +163,11 @@ cli
         skipExec: boolean;
       },
     ) => {
-      const rProposals: IProposals = require(join(process.cwd(), proposals));
+      const rProposals: IProposals = require(join(
+        process.cwd(),
+        ENV.proposalDir,
+        proposals,
+      ));
       printEnv();
       await batchApproveExecuteProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
