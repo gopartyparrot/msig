@@ -8,7 +8,7 @@ import { ProposalBase, TransactionInstructionExt } from "./ProposalBase";
 import { MultisigContext } from "../types";
 
 const BPF_LOADER_UPGRADEABLE_PID = new PublicKey(
-  "BPFLoaderUpgradeab1e11111111111111111111111"
+  "BPFLoaderUpgradeab1e11111111111111111111111",
 );
 
 //untested
@@ -18,7 +18,8 @@ export class UpgradeProgram extends ProposalBase {
     public accounts: {
       program: PublicKey;
       buffer: PublicKey;
-    }
+      spill: PublicKey;
+    },
   ) {
     super(memo, accounts);
   }
@@ -27,12 +28,13 @@ export class UpgradeProgram extends ProposalBase {
     console.log(`
 -------------NOTICE: upgrade program start-----------------
 it's your work to verify buffer content!
+accounts: 0:programDataAddress > 1:program > 2:buffer > 3:spill > 4:sysvarRent > 5:sysvarClock > 6:multisigPDA
 -------------NOTICE: upgrade program end-----------------
 `);
 
     const programAccount =
       await ctx.multisigProg.provider.connection.getAccountInfo(
-        this.accounts.program
+        this.accounts.program,
       );
     if (programAccount === null) {
       throw new Error("Invalid program ID");
@@ -48,7 +50,7 @@ it's your work to verify buffer content!
       { pubkey: this.accounts.program, isWritable: true, isSigner: false },
       { pubkey: this.accounts.buffer, isWritable: true, isSigner: false },
       {
-        pubkey: ctx.multisigProg.provider.wallet.publicKey,
+        pubkey: this.accounts.spill,
         isWritable: true,
         isSigner: false,
       }, //spill to receive buffer account SOL

@@ -1,3 +1,7 @@
+## 1.0.14
+
+- verifiable program upgrade
+
 ## 1.0.13
 
 - add env `PROPOSAL_DIR` to simplify cli argument
