@@ -26,7 +26,7 @@ setupJSONPrint();
 let ENV = {
   multisigProgram: new PublicKey(
     process.env.MULTISIG_PROGRAM ||
-      "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt",
+      "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"
   ),
   wallet: process.env.WALLET || join(homedir(), ".config/solana/id.json"),
   // https://api.testnet.solana.com
@@ -50,11 +50,14 @@ cli
   .option(
     "--program <program>",
     "multisig program",
-    "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt",
+    "msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"
   )
   .option("--wallet <wallet>", "wallet file", "./id.json")
   .on("option:rpc", () => (ENV.rpcUrl = cli.opts().rpc))
-  .on("option:program", () => (ENV.multisigProgram = cli.opts().program))
+  .on(
+    "option:program",
+    () => (ENV.multisigProgram = new PublicKey(cli.opts().program))
+  )
   .on("option:wallet", () => (ENV.wallet = cli.opts().wallet));
 
 cli.command("genkey [keyfile]").action((keyfile) => {
@@ -86,7 +89,7 @@ cli
         throw Error("at least 2 members and threshold >= owners.length");
       }
       setupMultisig(getProgramFromEnv(ENV), parseInt(threshold), owners);
-    },
+    }
   );
 
 cli
@@ -96,12 +99,12 @@ cli
   .option(
     "--small-tx",
     "will send create multisig instruction separately apart from prepare instruction (to avoid error: Transaction too large)",
-    false,
+    false
   )
   .option(
     "--dry-run",
     "will not send transaction, just print instructions",
-    false,
+    false
   )
   .action(
     async (
@@ -109,20 +112,20 @@ cli
       opts: {
         smallTx: boolean;
         dryRun: boolean;
-      },
+      }
     ) => {
       const rProposals: IProposals = require(join(
         process.cwd(),
         ENV.proposalDir,
-        proposals,
+        proposals
       ));
       await batchCreateProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
         rProposals.transactions,
         opts.smallTx,
-        opts.dryRun,
+        opts.dryRun
       );
-    },
+    }
   );
 
 cli
@@ -134,25 +137,25 @@ cli
     const rProposals: IProposals = require(join(
       process.cwd(),
       ENV.proposalDir,
-      proposals,
+      proposals
     ));
     await batchVerifyProposals(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
-      args.more,
+      args.more
     );
   });
 
 cli
   .command("approve")
   .description(
-    "approve and execute created multisig transactions from proposals",
+    "approve and execute created multisig transactions from proposals"
   )
   .argument("[proposals]", "proposal js file", "proposals.js")
   .option(
     "--skip-exec",
     "don't execute multisig transaction(but will approve)",
-    false,
+    false
   )
   .option("-m, --more", "verbose print", false)
   .action(
@@ -161,21 +164,21 @@ cli
       args: {
         more: boolean;
         skipExec: boolean;
-      },
+      }
     ) => {
       const rProposals: IProposals = require(join(
         process.cwd(),
         ENV.proposalDir,
-        proposals,
+        proposals
       ));
       printEnv();
       await batchApproveExecuteProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
         rProposals.transactions,
         args.skipExec,
-        args.more,
+        args.more
       );
-    },
+    }
   );
 
 cli
