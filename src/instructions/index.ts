@@ -5,3 +5,4 @@ export * from "./TokenMintToOwner";
 export * from "./TransferToken";
 export * from "./TransferTokenToOwner";
 export * from "./UpgradeProgram";
+export * from "./TransferLamports";
