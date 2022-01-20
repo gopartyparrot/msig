@@ -1,6 +1,6 @@
 {
   "name": "@parrotfi/msig",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "description": "serum multisig cli",
   "type": "commonjs",
   "main": "lib/src/index.js",
