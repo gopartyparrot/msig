@@ -25,9 +25,39 @@ export function printKeys(keys: Array<AccountMeta>) {
   console.log("");
 }
 
+interface NestedObject<T> extends Record<string, T | NestedObject<T>> {}
+
+export interface NestedObjectWithPublicKey extends NestedObject<PublicKey> {}
+
+function formatNestedObjectWithPublicKey(
+  obj: NestedObjectWithPublicKey,
+  loop = 0
+): string {
+  let str = "";
+  for (const [key, value] of Object.entries(obj)) {
+    if (value instanceof PublicKey) {
+      str += `\n${new Array(loop)
+        .fill("  ")
+        .join("")}${key}: ${value.toBase58()}`;
+    } else {
+      str += `\n${new Array(loop)
+        .fill("  ")
+        .join("")}${key}: ${formatNestedObjectWithPublicKey(value, loop + 1)}`;
+    }
+  }
+  return str;
+}
+
+export function printNestedObjectWithPublicKey(obj: NestedObjectWithPublicKey) {
+  if (obj === undefined || obj === null) {
+    return;
+  }
+  console.log(formatNestedObjectWithPublicKey(obj));
+}
+
 export async function fetchProposalsChainStates(
   multisigProg: Program,
-  proposals: ProposalBase[],
+  proposals: ProposalBase[]
 ): Promise<(AccountInfo<MultisigTransactionStruct> | null)[]> {
   const txPubkeys = proposals.map((p) => p.calcTransactionAccount().publicKey);
   const chainTransactions: (AccountInfo<MultisigTransactionStruct> | null)[] = (
@@ -51,7 +81,7 @@ export function buildMultisigProgram(
   rpc: string,
   multisigProgramId: PublicKey,
   wallet: Keypair,
-  opts = Provider.defaultOptions(),
+  opts = Provider.defaultOptions()
 ): Program {
   const connection = new Connection(rpc, opts.preflightCommitment);
   const provider = new Provider(connection, new NodeWallet(wallet), opts);
@@ -60,31 +90,31 @@ export function buildMultisigProgram(
 
 export function getWalletFromFile(path: string): Keypair {
   return Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" }))),
+    Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" })))
   );
 }
 export function getProgramFromEnv(ev: IEnv): Program {
   return buildMultisigProgram(
     ev.rpcUrl,
     ev.multisigProgram,
-    getWalletFromFile(ev.wallet),
+    getWalletFromFile(ev.wallet)
   );
 }
 
 export async function findMultisigSigner(
   multisigProgram: PublicKey,
-  multisigAddress: PublicKey,
+  multisigAddress: PublicKey
 ): Promise<PublicKey> {
   const [multisigSigner, nonce] = await PublicKey.findProgramAddress(
     [multisigAddress.toBuffer()],
-    multisigProgram,
+    multisigProgram
   );
   return multisigSigner;
 }
 
 export async function getMultisigContext(
   program: Program,
-  multisigAddress: PublicKey,
+  multisigAddress: PublicKey
 ): Promise<MultisigContext> {
   return {
     multisigProg: program,
@@ -95,7 +125,7 @@ export async function getMultisigContext(
 
 export function assertProposerIsOwnerOfMultisig(
   proposerPubkey: PublicKey,
-  multisig: MultisigStruct,
+  multisig: MultisigStruct
 ) {
   for (const owner of multisig.owners) {
     if (owner.equals(proposerPubkey)) {
@@ -124,12 +154,12 @@ export class NodeWallet implements Wallet {
 }
 
 /** better json print for PublicKey */
-export function setupJSONPrint() {
-  PublicKey.prototype["toJSON"] = function () {
+export function setupJSONPrint(publicKeyClass: any) {
+  publicKeyClass.prototype["toJSON"] = function () {
     return this.toBase58();
   };
 
-  PublicKey.prototype[util.inspect.custom] = function () {
+  publicKeyClass.prototype[util.inspect.custom] = function () {
     return this.toBase58();
   };
 }
