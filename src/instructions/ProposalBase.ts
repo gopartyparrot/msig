@@ -13,13 +13,13 @@ import {
   NamedPubkey,
 } from "../types";
 import { printKeys } from "../utils";
-import { printNestedObjectWithPublicKey } from "..";
+import { NestedObjectWithPublicKey, printNestedObjectWithPublicKey } from "..";
 
 export abstract class ProposalBase {
   constructor(
     public memo: string,
     public accounts: NamedPubkey | PublicKey[], //used to create instruction
-    public info: any
+    public info?: NestedObjectWithPublicKey
   ) {}
 
   public calcAccountWithSeed(seed: string): Keypair {
