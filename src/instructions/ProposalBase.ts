@@ -47,7 +47,7 @@ export abstract class ProposalBase {
     }
     for (let i = 0; i < multisigInstr.keys.length; i++) {
       if (
-        !multisigInstr.keys[i].pubkey.equals(chainTxState.accounts[i].pubkey)
+        multisigInstr.keys[i].pubkey.toBase58() != chainTxState.accounts[i].pubkey.toBase58()
       ) {
         throw Error(`verify failed, accounts (index: ${i}) not match`);
       }
@@ -55,7 +55,7 @@ export abstract class ProposalBase {
 
     if (
       !multisigInstr.data.equals(chainTxState.data) ||
-      !multisigInstr.programId.equals(chainTxState.programId)
+      multisigInstr.programId.toBase58() != chainTxState.programId.toBase58()
     ) {
       throw Error("verify failed, programId or instruction data not match");
     }
