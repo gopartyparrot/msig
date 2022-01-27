@@ -29,30 +29,15 @@ interface NestedObject<T> extends Record<string, T | NestedObject<T>> {}
 
 export interface NestedObjectWithPublicKey extends NestedObject<PublicKey> {}
 
-function formatNestedObjectWithPublicKey(
-  obj: NestedObjectWithPublicKey,
-  loop = 0
-): string {
-  let str = "";
-  for (const [key, value] of Object.entries(obj)) {
-    if (value instanceof PublicKey) {
-      str += `\n${new Array(loop)
-        .fill("  ")
-        .join("")}${key}: ${value.toBase58()}`;
-    } else {
-      str += `\n${new Array(loop)
-        .fill("  ")
-        .join("")}${key}: ${formatNestedObjectWithPublicKey(value, loop + 1)}`;
-    }
+export function publicKeyReplacer(key: string, value: any) {
+  if (value && value.constructor.name === "PublicKey" && !!value.toBase58) {
+    return value.toBase58();
   }
-  return str;
+  return value;
 }
 
 export function printNestedObjectWithPublicKey(obj: NestedObjectWithPublicKey) {
-  if (obj === undefined || obj === null) {
-    return;
-  }
-  console.log(formatNestedObjectWithPublicKey(obj));
+  console.log(JSON.stringify(obj, publicKeyReplacer, 2));
 }
 
 export async function fetchProposalsChainStates(

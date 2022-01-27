@@ -13,13 +13,12 @@ import {
   NamedPubkey,
 } from "../types";
 import { printKeys } from "../utils";
-import { NestedObjectWithPublicKey, printNestedObjectWithPublicKey } from "..";
+import { printNestedObjectWithPublicKey } from "..";
 
 export abstract class ProposalBase {
   constructor(
     public memo: string,
-    public accounts: NamedPubkey | PublicKey[], //used to create instruction
-    public info?: NestedObjectWithPublicKey
+    public accounts: NamedPubkey | PublicKey[] //used to create instruction
   ) {}
 
   public calcAccountWithSeed(seed: string): Keypair {
@@ -39,8 +38,7 @@ export abstract class ProposalBase {
     chainTxState: MultisigTransactionStruct,
     verbose: boolean
   ) {
-    const instrs = await this.createInstr(ctx);
-    const multisigInstr = instrs.multisigInstr;
+    const { multisigInstr, auditInfo } = await this.createInstr(ctx);
 
     if (multisigInstr.keys.length != chainTxState.accounts.length) {
       throw Error(
@@ -65,8 +63,8 @@ export abstract class ProposalBase {
     if (verbose) {
       console.log("multisig instruction:");
       console.log("program id:", multisigInstr.programId.toBase58());
-      console.log("info:");
-      printNestedObjectWithPublicKey(this.info);
+      console.log("audit info:");
+      printNestedObjectWithPublicKey(auditInfo);
       console.log("accounts:");
       printKeys(multisigInstr.keys);
       console.log(
@@ -84,6 +82,8 @@ export abstract class ProposalBase {
 
 export type TransactionInstructionExt = {
   multisigInstr: TransactionInstruction;
+
+  auditInfo?: any;
 
   //instructions need to execute (no multisig needed) before create multisig transaction
   prepare?: {
