@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { web3 } from "@project-serum/anchor";
 import * as packageJSON from "../../package.json";
 import { Command } from "commander";
 import {
@@ -19,7 +20,8 @@ import { Account, PublicKey } from "@solana/web3.js";
 import { homedir } from "os";
 import { writeFileSync } from "fs";
 
-setupJSONPrint();
+setupJSONPrint(PublicKey);
+setupJSONPrint(web3.PublicKey);
 
 // require("dotenv").config();
 
