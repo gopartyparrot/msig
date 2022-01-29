@@ -1,19 +1,10 @@
-import {
-  Keypair,
-  PublicKey,
-  Signer,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import nacl from "tweetnacl";
-import { fromByteArray } from "base64-js";
+import { Keypair, PublicKey, Signer, TransactionInstruction } from '@solana/web3.js';
+import nacl from 'tweetnacl';
+import { fromByteArray } from 'base64-js';
 
-import {
-  MultisigContext,
-  MultisigTransactionStruct,
-  NamedPubkey,
-} from "../types";
-import { printKeys } from "../utils";
-import { NestedObjectWithPublicKey, printNestedObjectWithPublicKey } from "..";
+import { MultisigContext, MultisigTransactionStruct, NamedPubkey } from '../types';
+import { printKeys } from '../utils';
+import { NestedObjectWithPublicKey, printNestedObjectWithPublicKey } from '..';
 
 export abstract class ProposalBase {
   constructor(
@@ -23,9 +14,7 @@ export abstract class ProposalBase {
   ) {}
 
   public calcAccountWithSeed(seed: string): Keypair {
-    return Keypair.fromSeed(
-      nacl.hash(Uint8Array.from(Buffer.from(seed))).slice(0, 32)
-    );
+    return Keypair.fromSeed(nacl.hash(Uint8Array.from(Buffer.from(seed))).slice(0, 32));
   }
 
   public calcTransactionAccount(): Keypair {
@@ -48,38 +37,33 @@ export abstract class ProposalBase {
       );
     }
     for (let i = 0; i < multisigInstr.keys.length; i++) {
-      if (
-        multisigInstr.keys[i].pubkey.toBase58() != chainTxState.accounts[i].pubkey.toBase58()
-      ) {
+      if (multisigInstr.keys[i].pubkey.toBase58() != chainTxState.accounts[i].pubkey.toBase58()) {
         throw Error(`verify failed, accounts (index: ${i}) not match`);
       }
     }
 
-    if (
-      !multisigInstr.data.equals(chainTxState.data) ||
-      multisigInstr.programId.toBase58() != chainTxState.programId.toBase58()
-    ) {
-      throw Error("verify failed, programId or instruction data not match");
+    if (!multisigInstr.data.equals(chainTxState.data)) {
+      throw Error('verify failed, instruction data not match');
+    }
+    if (multisigInstr.programId.toBase58() != chainTxState.programId.toBase58()) {
+      throw Error(
+        `verify failed, programId not match, local: ${multisigInstr.programId.toBase58()}, created: ${chainTxState.programId.toBase58()}`
+      );
     }
 
     if (verbose) {
-      console.log("multisig instruction:");
-      console.log("program id:", multisigInstr.programId.toBase58());
-      console.log("info:");
+      console.log('multisig instruction:');
+      console.log('program id:', multisigInstr.programId.toBase58());
+      console.log('info:');
       printNestedObjectWithPublicKey(this.info);
-      console.log("accounts:");
+      console.log('accounts:');
       printKeys(multisigInstr.keys);
-      console.log(
-        "local created instr in base64: ",
-        fromByteArray(multisigInstr.data)
-      );
+      console.log('local created instr in base64: ', fromByteArray(multisigInstr.data));
     }
   }
 
   // use deterministic address (calculated from memo string)
-  abstract createInstr(
-    ctx: MultisigContext
-  ): Promise<TransactionInstructionExt>;
+  abstract createInstr(ctx: MultisigContext): Promise<TransactionInstructionExt>;
 }
 
 export type TransactionInstructionExt = {
