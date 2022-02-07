@@ -34,15 +34,15 @@ function formatNestedObjectWithPublicKey(
   loop = 0
 ): string {
   let str = "";
-  for (const [key, value] of Object.entries(obj)) {
-    if (value instanceof PublicKey) {
+  for (const [key, value] of Object.entries(obj ?? {})) {
+    if (value?.constructor?.name == "PublicKey") {
       str += `\n${new Array(loop)
         .fill("  ")
-        .join("")}${key}: ${value.toBase58()}`;
+        .join("")}${key}: ${value}`;
     } else {
       str += `\n${new Array(loop)
         .fill("  ")
-        .join("")}${key}: ${formatNestedObjectWithPublicKey(value, loop + 1)}`;
+        .join("")}${key}: ${formatNestedObjectWithPublicKey(value as any, loop + 1)}`;
     }
   }
   return str;
