@@ -113,9 +113,9 @@ https://solscan.io/tx/5jqCRbSd8PbBU5cJgdL1bw3YvqXHpGPeAwmFYaJVzGxDu7swZBwxH2frt6
 Let's create proposals to transfer USDC tokens out of the multisig to the `id1` wallet. This multisig tool is designed to make it easy to create, verify, and approve multiple transactions at once. So let's try to create 2 separate transactions to send out USDC:
 
 ```js
-const { u64 } = require("@solana/spl-token");
-const { PublicKey } = require("@solana/web3.js");
-const { TransferTokenToOwner } = require("@parrotfi/msig");
+const { u64 } = require("@solana/spl-token")
+const { PublicKey } = require("@solana/web3.js")
+const { TransferTokenToOwner } = require("@parrotfi/msig")
 
 // Maintain known/verified addresses, to make it easier to review proposed
 // transactions.
@@ -127,7 +127,7 @@ const known = {
   wallets: {
     parrot: new PublicKey("9GFcTi42f7fdCFhSoA7Ycqr64PbUAPnot77fqwoq3MGn"),
   },
-};
+}
 
 module.exports = {
   multisig: new PublicKey("9he5FHBkLtEFGQeBA6xBubWbbYoAdAX3DrjAmEiUvi7S"),
@@ -154,7 +154,7 @@ module.exports = {
       new u64(0.7 * 1e6), // 0.7 USDC
     ),
   ],
-};
+}
 ```
 
 Then use the `create` command to create these multisig transactions:

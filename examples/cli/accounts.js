@@ -1,4 +1,4 @@
-const { PublicKey } = require("@solana/web3.js");
+const { PublicKey } = require("@solana/web3.js")
 
 module.exports = {
   testTokenMint: new PublicKey("8ZmhVd4YUqHhGGo7bAVaDxD6zDtCnfhG98EL6fCaHqGj"),
@@ -6,7 +6,5 @@ module.exports = {
 
   memberA: new PublicKey("9DNhHuvCFLCFzPkaRrwv1Wt8DQucwRgQmgagq7eE3Qq4"),
 
-  associatedMultisigTestTokenAccount: new PublicKey(
-    "38KWFstDdt7HhM1d26JrH6Tcvw4VGoW4rJNEjoDcymuF"
-  ),
-};
+  associatedMultisigTestTokenAccount: new PublicKey("38KWFstDdt7HhM1d26JrH6Tcvw4VGoW4rJNEjoDcymuF"),
+}

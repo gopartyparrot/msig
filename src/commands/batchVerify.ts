@@ -1,11 +1,7 @@
-import chalk from "chalk";
-import {
-  ensureProposalsMemoUnique,
-  fetchProposalsChainStates,
-  printKeys,
-} from "../utils";
-import { ProposalBase } from "../instructions/ProposalBase";
-import { MultisigContext, MultisigTransactionStruct } from "../types";
+import chalk from "chalk"
+import { ensureProposalsMemoUnique, fetchProposalsChainStates, printKeys } from "../utils"
+import { ProposalBase } from "../instructions/ProposalBase"
+import { MultisigContext, MultisigTransactionStruct } from "../types"
 
 /// verify configured multisig tx
 export async function batchVerifyProposals(
@@ -13,25 +9,22 @@ export async function batchVerifyProposals(
   proposals: ProposalBase[],
   verbose: boolean,
 ) {
-  const multisigProg = ctx.multisigProg;
-  ensureProposalsMemoUnique(proposals);
-  const chainTransactions = await fetchProposalsChainStates(
-    multisigProg,
-    proposals,
-  );
+  const multisigProg = ctx.multisigProg
+  ensureProposalsMemoUnique(proposals)
+  const chainTransactions = await fetchProposalsChainStates(multisigProg, proposals)
 
   for (let i = 0; i < proposals.length; i++) {
-    const prop = proposals[i];
-    const chainTx = chainTransactions[i];
+    const prop = proposals[i]
+    const chainTx = chainTransactions[i]
     if (chainTx == null) {
-      console.log(prop.memo, chalk.yellow(`not yet created, skip verify`));
-      continue;
+      console.log(prop.memo, chalk.yellow(`not yet created, skip verify`))
+      continue
     }
     if (chainTx.data.didExecute) {
-      console.log(prop.memo, chalk.grey(`already executed, skip verify`));
-      continue;
+      console.log(prop.memo, chalk.grey(`already executed, skip verify`))
+      continue
     }
-    await verify(ctx, prop, chainTx.data, verbose);
+    await verify(ctx, prop, chainTx.data, verbose)
   }
 }
 
@@ -41,8 +34,8 @@ export async function verify(
   chainTxState: MultisigTransactionStruct,
   verbose: boolean,
 ) {
-  const tx = proposal.calcTransactionAccount().publicKey;
-  console.log(`=======>> verify ${proposal.memo} ${tx.toBase58()}`);
-  await proposal.verifyTx(ctx, chainTxState, verbose);
-  console.log(chalk.green(` PASSED`));
+  const tx = proposal.calcTransactionAccount().publicKey
+  console.log(`=======>> verify ${proposal.memo} ${tx.toBase58()}`)
+  await proposal.verifyTx(ctx, chainTxState, verbose)
+  console.log(chalk.green(` PASSED`))
 }

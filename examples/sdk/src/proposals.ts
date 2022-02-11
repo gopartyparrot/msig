@@ -1,14 +1,10 @@
-import { u64 } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import {
-  ProposalBase,
-  TokenMintToOwner,
-  TransferTokenToOwner,
-} from "@parrotfi/msig";
-import { accounts } from "./accounts";
-import { CustomTokenBurn } from "./customProposal";
+import { u64 } from "@solana/spl-token"
+import { PublicKey } from "@solana/web3.js"
+import { ProposalBase, TokenMintToOwner, TransferTokenToOwner } from "@parrotfi/msig"
+import { accounts } from "./accounts"
+import { CustomTokenBurn } from "./customProposal"
 
-import util from "util";
+import util from "util"
 
 export const PROPOSALS: ProposalBase[] = [
   //example proposals
@@ -38,15 +34,15 @@ export const PROPOSALS: ProposalBase[] = [
     },
     new u64(2),
   ),
-];
+]
 
 /** better json print for PublicKey */
 export function setupJSONPrint() {
   PublicKey.prototype["toJSON"] = function () {
-    return this.toBase58();
-  };
+    return this.toBase58()
+  }
 
   PublicKey.prototype[util.inspect.custom] = function () {
-    return this.toBase58();
-  };
+    return this.toBase58()
+  }
 }

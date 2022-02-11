@@ -1,22 +1,14 @@
-import {
-  PublicKey,
-  Transaction,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import chalk from "chalk";
+import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js"
+import chalk from "chalk"
 import {
   assertProposerIsOwnerOfMultisig,
   ensureProposalsMemoUnique,
   fetchProposalsChainStates,
-} from "../utils";
-import { ProposalBase } from "../instructions/ProposalBase";
-import {
-  MultisigContext,
-  MultisigStruct,
-  MultisigTransactionStruct,
-} from "../types";
+} from "../utils"
+import { ProposalBase } from "../instructions/ProposalBase"
+import { MultisigContext, MultisigStruct, MultisigTransactionStruct } from "../types"
 
-import { verify } from "./batchVerify";
+import { verify } from "./batchVerify"
 
 export async function batchApproveExecuteProposals(
   ctx: MultisigContext,
@@ -24,42 +16,37 @@ export async function batchApproveExecuteProposals(
   skipExecute: boolean,
   verbose: boolean,
 ) {
-  const multisigProg = ctx.multisigProg;
-  ensureProposalsMemoUnique(proposals);
-  const proposerPubkey = multisigProg.provider.wallet.publicKey;
-  const chainTransactions = await fetchProposalsChainStates(
-    multisigProg,
-    proposals,
-  );
+  const multisigProg = ctx.multisigProg
+  ensureProposalsMemoUnique(proposals)
+  const proposerPubkey = multisigProg.provider.wallet.publicKey
+  const chainTransactions = await fetchProposalsChainStates(multisigProg, proposals)
 
-  const multisigState: MultisigStruct =
-    (await multisigProg.account.multisig.fetch(ctx.multisig)) as any;
-  assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState);
+  const multisigState: MultisigStruct = (await multisigProg.account.multisig.fetch(
+    ctx.multisig,
+  )) as any
+  assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState)
 
   for (let i = 0; i < proposals.length; i++) {
-    const prop = proposals[i];
-    const txPubkey = prop.calcTransactionAccount().publicKey;
-    const chainTx = chainTransactions[i];
-    console.log(`======>> approve/execute ${prop.memo} ${txPubkey.toBase58()}`);
+    const prop = proposals[i]
+    const txPubkey = prop.calcTransactionAccount().publicKey
+    const chainTx = chainTransactions[i]
+    console.log(`======>> approve/execute ${prop.memo} ${txPubkey.toBase58()}`)
     if (chainTx == null) {
-      console.log(chalk.red(` not created, continue`));
-      continue;
+      console.log(chalk.red(` not created, continue`))
+      continue
     }
     if (chainTx.data.didExecute) {
-      console.log(chalk.grey(` did executed, skip approve/execute, continue`));
-      continue;
+      console.log(chalk.grey(` did executed, skip approve/execute, continue`))
+      continue
     }
 
-    const currentSignerIndex = multisigState.owners.findIndex((x) =>
-      x.equals(proposerPubkey),
-    );
-    const isCurrentProposerApproved = chainTx.data.signers[currentSignerIndex];
-    const approvedCount = chainTx.data.signers.filter((x) => x).length;
+    const currentSignerIndex = multisigState.owners.findIndex((x) => x.equals(proposerPubkey))
+    const isCurrentProposerApproved = chainTx.data.signers[currentSignerIndex]
+    const approvedCount = chainTx.data.signers.filter((x) => x).length
 
     let needExecute = skipExecute
       ? false
-      : multisigState.threshold - approvedCount ===
-        (isCurrentProposerApproved ? 0 : 1);
+      : multisigState.threshold - approvedCount === (isCurrentProposerApproved ? 0 : 1)
 
     await approveExecute(
       ctx,
@@ -71,7 +58,7 @@ export async function batchApproveExecuteProposals(
         needExecute,
       },
       verbose,
-    );
+    )
   }
 }
 
@@ -81,23 +68,21 @@ async function approveExecute(
   chainTxState: MultisigTransactionStruct,
   proposerPubkey: PublicKey,
   options: {
-    needApprove: boolean;
-    needExecute: boolean;
+    needApprove: boolean
+    needExecute: boolean
   },
   verbose: boolean,
 ) {
   if (!options.needApprove && !options.needExecute) {
     console.log(
-      chalk.red(
-        "you have approved, execute skipped (more approves wanted or with --skip-exec)",
-      ),
-    );
-    return;
+      chalk.red("you have approved, execute skipped (more approves wanted or with --skip-exec)"),
+    )
+    return
   }
-  await verify(ctx, proposal, chainTxState, verbose); //verify first
+  await verify(ctx, proposal, chainTxState, verbose) //verify first
 
-  const txKeypair = proposal.calcTransactionAccount();
-  const instrs: TransactionInstruction[] = [];
+  const txKeypair = proposal.calcTransactionAccount()
+  const instrs: TransactionInstruction[] = []
   if (options.needApprove) {
     instrs.push(
       ctx.multisigProg.instruction.approve({
@@ -107,7 +92,7 @@ async function approveExecute(
           owner: proposerPubkey,
         },
       }),
-    );
+    )
   }
   if (options.needExecute) {
     instrs.push(
@@ -120,9 +105,9 @@ async function approveExecute(
         remainingAccounts: chainTxState.accounts
           .map((t: any) => {
             if (t.pubkey.equals(ctx.multisigPDA)) {
-              return { ...t, isSigner: false };
+              return { ...t, isSigner: false }
             }
-            return t;
+            return t
           })
           .concat({
             pubkey: chainTxState.programId,
@@ -130,10 +115,8 @@ async function approveExecute(
             isSigner: false,
           }),
       }),
-    );
+    )
   }
-  const txid = await ctx.multisigProg.provider.send(
-    new Transaction().add(...instrs),
-  );
-  console.log("execute txid:", txid);
+  const txid = await ctx.multisigProg.provider.send(new Transaction().add(...instrs))
+  console.log("execute txid:", txid)
 }

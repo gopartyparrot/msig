@@ -4,27 +4,27 @@ import {
   Token,
   TOKEN_PROGRAM_ID,
   u64,
-} from "@solana/spl-token";
-import { Connection, PublicKey } from "@solana/web3.js";
+} from "@solana/spl-token"
+import { Connection, PublicKey } from "@solana/web3.js"
 
-import { ProposalBase, TransactionInstructionExt } from "./ProposalBase";
-import { MultisigContext } from "../types";
+import { ProposalBase, TransactionInstructionExt } from "./ProposalBase"
+import { MultisigContext } from "../types"
 
 export class TransferTokenToOwner extends ProposalBase {
   constructor(
     public memo: string,
     public accounts: {
-      mint: PublicKey;
+      mint: PublicKey
       // source: PublicKey;
-      toOwner: PublicKey;
+      toOwner: PublicKey
     },
     public amount: u64,
   ) {
-    super(memo, accounts);
+    super(memo, accounts)
   }
 
   async createInstr(ctx: MultisigContext): Promise<TransactionInstructionExt> {
-    const mint = this.accounts.mint;
+    const mint = this.accounts.mint
 
     const fromAssociatedTokenAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -32,7 +32,7 @@ export class TransferTokenToOwner extends ProposalBase {
       mint,
       ctx.multisigPDA,
       true,
-    );
+    )
 
     const toAssociatedTokenAddress = await Token.getAssociatedTokenAddress(
       ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -40,7 +40,7 @@ export class TransferTokenToOwner extends ProposalBase {
       mint,
       this.accounts.toOwner,
       true,
-    );
+    )
     const ret: TransactionInstructionExt = {
       multisigInstr: Token.createTransferInstruction(
         TOKEN_PROGRAM_ID,
@@ -50,10 +50,10 @@ export class TransferTokenToOwner extends ProposalBase {
         [],
         this.amount,
       ),
-    };
+    }
     const solBalance = await ctx.multisigProg.provider.connection.getBalance(
       toAssociatedTokenAddress,
-    );
+    )
     if (solBalance === 0) {
       ret.prepare = {
         instructions: [
@@ -66,20 +66,17 @@ export class TransferTokenToOwner extends ProposalBase {
             ctx.multisigProg.provider.wallet.publicKey,
           ),
         ],
-      };
+      }
     }
-    return ret;
+    return ret
   }
 
-  async getTokenAccountMint(
-    conn: Connection,
-    tokenAcc: PublicKey,
-  ): Promise<PublicKey> {
-    const info = await conn.getAccountInfo(tokenAcc, "confirmed");
+  async getTokenAccountMint(conn: Connection, tokenAcc: PublicKey): Promise<PublicKey> {
+    const info = await conn.getAccountInfo(tokenAcc, "confirmed")
     if (!info) {
-      throw Error("token account not found for:" + tokenAcc.toBase58());
+      throw Error("token account not found for:" + tokenAcc.toBase58())
     }
-    const accountInfo = AccountLayout.decode(Buffer.from(info.data));
-    return new PublicKey(accountInfo.mint);
+    const accountInfo = AccountLayout.decode(Buffer.from(info.data))
+    return new PublicKey(accountInfo.mint)
   }
 }

@@ -1,19 +1,16 @@
-import { findMultisigSigner, setupJSONPrint } from "../utils";
-import { ensureDevnetEnv, getDevnetProgramFromEnvWithWallet } from "./common";
-import { testProposals, TEST_KEYS } from "./common";
-import { batchVerifyProposals } from "../commands/batchVerify";
+import { findMultisigSigner, setupJSONPrint } from "../utils"
+import { ensureDevnetEnv, getDevnetProgramFromEnvWithWallet } from "./common"
+import { testProposals, TEST_KEYS } from "./common"
+import { batchVerifyProposals } from "../commands/batchVerify"
 
 describe("create proposals", () => {
   it("should create success", async () => {
-    setupJSONPrint();
+    setupJSONPrint()
 
-    const program = getDevnetProgramFromEnvWithWallet(TEST_KEYS.memberB);
-    await ensureDevnetEnv(program, TEST_KEYS.memberB);
+    const program = getDevnetProgramFromEnvWithWallet(TEST_KEYS.memberB)
+    await ensureDevnetEnv(program, TEST_KEYS.memberB)
 
-    const multisigPDA = await findMultisigSigner(
-      program.programId,
-      TEST_KEYS.multisig.publicKey,
-    );
+    const multisigPDA = await findMultisigSigner(program.programId, TEST_KEYS.multisig.publicKey)
 
     await batchVerifyProposals(
       {
@@ -23,6 +20,6 @@ describe("create proposals", () => {
       },
       testProposals,
       true,
-    );
-  });
-});
+    )
+  })
+})

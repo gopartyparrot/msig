@@ -1,14 +1,14 @@
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair, PublicKey } from "@solana/web3.js"
 import {
   buildMultisigProgram,
   batchVerifyProposals,
   setupJSONPrint,
   getMultisigContext,
-} from "@parrotfi/msig";
-import { readFileSync } from "fs";
-import { join } from "path";
-import { accounts } from "./accounts";
-import { PROPOSALS } from "./proposals";
+} from "@parrotfi/msig"
+import { readFileSync } from "fs"
+import { join } from "path"
+import { accounts } from "./accounts"
+import { PROPOSALS } from "./proposals"
 
 async function verifyProposals() {
   const wallet = Keypair.fromSecretKey(
@@ -19,20 +19,16 @@ async function verifyProposals() {
         }),
       ),
     ),
-  );
+  )
 
   const program = buildMultisigProgram(
     "https://api.devnet.solana.com",
     new PublicKey("msigmtwzgXJHj2ext4XJjCDmpbcMuufFb5cHuwg6Xdt"),
     wallet,
-  );
+  )
 
-  await batchVerifyProposals(
-    await getMultisigContext(program, accounts.multisig),
-    PROPOSALS,
-    true,
-  );
+  await batchVerifyProposals(await getMultisigContext(program, accounts.multisig), PROPOSALS, true)
 }
 
-setupJSONPrint();
-verifyProposals();
+setupJSONPrint()
+verifyProposals()

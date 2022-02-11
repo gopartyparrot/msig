@@ -1,17 +1,17 @@
-import { Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import { ProposalBase } from "@parrotfi/msig";
+import { Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token"
+import { PublicKey } from "@solana/web3.js"
+import { ProposalBase } from "@parrotfi/msig"
 
 export class CustomTokenBurn extends ProposalBase {
   constructor(
     public memo: string,
     public accounts: {
-      mint: PublicKey;
-      burnFrom: PublicKey;
+      mint: PublicKey
+      burnFrom: PublicKey
     },
-    public amount: u64
+    public amount: u64,
   ) {
-    super(memo, accounts);
+    super(memo, accounts)
   }
 
   async createInstr(ctx) {
@@ -22,8 +22,8 @@ export class CustomTokenBurn extends ProposalBase {
         this.accounts.burnFrom,
         ctx.multisigPDA,
         [],
-        this.amount
+        this.amount,
       ),
-    };
+    }
   }
 }
