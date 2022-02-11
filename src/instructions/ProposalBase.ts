@@ -43,6 +43,9 @@ export abstract class ProposalBase {
     }
 
     if (!multisigInstr.data.equals(chainTxState.data)) {
+      console.log(multisigInstr.data.toString("hex"))
+      console.log(chainTxState.data.toString("hex"))
+
       throw Error("verify failed, instruction data not match")
     }
     if (multisigInstr.programId.toBase58() != chainTxState.programId.toBase58()) {

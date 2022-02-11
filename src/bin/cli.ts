@@ -18,6 +18,19 @@ import { writeFileSync } from "fs"
 setupJSONPrint(PublicKey)
 setupJSONPrint(web3.PublicKey)
 
+async function loadProposals(fname: string): Promise<IProposals> {
+  const fpath = join(process.cwd(), ENV.proposalDir, fname)
+  const mod = require(fpath)
+
+  if (typeof mod == "function") {
+    // () => Promise<IProposals>
+    let proposals: IProposals = await mod()
+    return proposals
+  }
+
+  return mod
+}
+
 // require("dotenv").config();
 
 let ENV = {
@@ -97,7 +110,7 @@ cli
         dryRun: boolean
       },
     ) => {
-      const rProposals: IProposals = require(join(process.cwd(), ENV.proposalDir, proposals))
+      const rProposals: IProposals = await loadProposals(proposals)
       await batchCreateProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
         rProposals.transactions,
@@ -113,7 +126,8 @@ cli
   .argument("[proposals]", "proposal js file", "proposals.js")
   .option("-m, --more", "verbose print", false)
   .action(async (proposals: string, args: any) => {
-    const rProposals: IProposals = require(join(process.cwd(), ENV.proposalDir, proposals))
+    const rProposals: IProposals = await loadProposals(proposals)
+
     await batchVerifyProposals(
       await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
       rProposals.transactions,
@@ -135,7 +149,7 @@ cli
         skipExec: boolean
       },
     ) => {
-      const rProposals: IProposals = require(join(process.cwd(), ENV.proposalDir, proposals))
+      const rProposals: IProposals = await loadProposals(proposals)
       printEnv()
       await batchApproveExecuteProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
