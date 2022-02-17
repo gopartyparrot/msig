@@ -58,18 +58,18 @@ export async function fetchProposalsChainStates(
   const txPubkeys = proposals.map((p) => p.calcTransactionAccount().publicKey)
   const chainTransactions: (AccountInfo<MultisigTransactionStruct> | null)[] = (
     await multisigProg.provider.connection.getMultipleAccountsInfo(txPubkeys)
-  ).map((acc, idx): AccountInfo<MultisigTransactionStruct> => {
+  ).map((acc): AccountInfo<MultisigTransactionStruct> => {
     return !acc
       ? null
       : {
           ...acc,
-          data: multisigProg.coder.accounts.decode("Transaction", acc.data),
+          data: multisigProg.coder.accounts.decode("Transaction", acc.data as Buffer),
         }
   })
   return chainTransactions
 }
 
-export function sleep(ms) {
+export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
@@ -155,8 +155,12 @@ export function setupJSONPrint(publicKeyClass: any) {
 }
 
 export function ensureProposalsMemoUnique(proposals: ProposalBase[]) {
-  if (new Set(proposals.map((x) => x.memo)).size != proposals.length) {
-    throw Error("duplicated memo for multisig transactions")
+  const memos = new Set<string>()
+  for (const proposal of proposals) {
+    if (memos.has(proposal.memo)) {
+      throw Error(`duplicated memo for multisig transactions: ${proposal.memo}`)
+    }
+    memos.add(proposal.memo)
   }
 }
 
