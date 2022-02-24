@@ -28,6 +28,7 @@ export type MultisigStruct = {
 
 export interface IProposals {
   multisig: PublicKey //multisig address(not PDA)
+  allowsMap?: Map<string, ProposalBase[]>
   transactions: ProposalBase[]
 }
 
