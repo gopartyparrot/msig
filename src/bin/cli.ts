@@ -20,7 +20,7 @@ setupJSONPrint(web3.PublicKey)
 
 async function loadProposals(fname: string): Promise<IProposals> {
   const fpath = join(process.cwd(), ENV.proposalDir, fname)
-  const mod = require(fpath)
+  const mod = require(fpath).default
 
   if (typeof mod == "function") {
     // () => Promise<IProposals>
