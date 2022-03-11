@@ -27,10 +27,9 @@ export async function batchCreateProposals(
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState)
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i]
-    const multipleAccountsEmpty =
-      multipleAccounts[i] &&
-      multipleAccounts[i].lamports > 0 &&
-      multipleAccounts[i].data.toString("hex").replaceAll("0", "").length === 0
+    const multipleAccountsEmpty = multipleAccounts[i] && multipleAccounts[i].lamports > 0
+    // TODO init multisig if account data is empty
+    // && multipleAccounts[i].data.toString("hex").replaceAll("0", "").length === 0
     if (multipleAccountsEmpty) {
       console.log(
         chalk.green(`ALREADY CREATED: `),
@@ -69,40 +68,6 @@ async function createTx(
   }
   const txSize = 100 + 34 * ix.keys.length + ix.data.length
 
-  // if (smallTransaction) {
-  //   //first send prepare instructions
-  //   const prepareTxid = await ctx.multisigProg.provider.send(
-  //     new Transaction().add(
-  //       ...(instrs.prepare?.instructions || []),
-  //       await (ctx.multisigProg.account.transaction.createInstruction as any)(transaction, txSize),
-  //     ),
-  //     [...(instrs.prepare?.signers || []), transaction],
-  //   )
-  //   console.log("prepare txid:", prepareTxid)
-
-  //   for (;;) {
-  //     console.log("check transaction account created successfully")
-  //     const transactionAccountSolBalance = await ctx.multisigProg.provider.connection.getBalance(
-  //       transaction.publicKey,
-  //     )
-  //     if (transactionAccountSolBalance > 0) {
-  //       console.log("wait 3s to ensure transaction created")
-  //       await sleep(3 * 1000)
-  //       break
-  //     }
-  //   }
-
-  //   //then send create multisig transaction instruction
-  //   const txid = await ctx.multisigProg.rpc.createTransaction(ix.programId, ix.keys, ix.data, {
-  //     accounts: {
-  //       multisig: ctx.multisig,
-  //       transaction: transaction.publicKey,
-  //       proposer: proposerPubkey,
-  //       rent: SYSVAR_RENT_PUBKEY,
-  //     },
-  //   })
-  //   console.log("create multisig txid:", txid)
-  // } else {
   const instruction = await ctx.multisigProg.instruction.createTransaction(
     ix.programId,
     ix.keys,
