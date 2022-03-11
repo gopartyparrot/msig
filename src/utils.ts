@@ -1,12 +1,6 @@
-import { Program, Provider, Wallet } from "@project-serum/anchor"
-import {
-  AccountInfo,
-  AccountMeta,
-  Connection,
-  Keypair,
-  PublicKey,
-  Transaction,
-} from "@solana/web3.js"
+import { Program, Wallet } from "@project-serum/anchor"
+import { AccountInfo, AccountMeta, Keypair, PublicKey, Transaction } from "@solana/web3.js"
+import { MultipleWalletProvider } from "@parrotfi/common"
 import { readFileSync } from "fs"
 import { ProposalBase } from "./instructions/ProposalBase"
 import { MultisigStruct, MultisigTransactionStruct } from "./types"
@@ -74,21 +68,18 @@ export function sleep(ms: number) {
 }
 
 export function buildMultisigProgram(
-  rpc: string,
+  provider: MultipleWalletProvider,
   multisigProgramId: PublicKey,
-  wallet: Keypair,
-  opts = Provider.defaultOptions(),
 ): Program {
-  const connection = new Connection(rpc, opts.preflightCommitment)
-  const provider = new Provider(connection, new NodeWallet(wallet), opts)
-  return new Program(multisigIdl as any, multisigProgramId, provider)
+  return new Program(multisigIdl as any, multisigProgramId, provider.anchorProvider)
 }
 
 export function getWalletFromFile(path: string): Keypair {
   return Keypair.fromSecretKey(Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" }))))
 }
 export function getProgramFromEnv(ev: IEnv): Program {
-  return buildMultisigProgram(ev.rpcUrl, ev.multisigProgram, getWalletFromFile(ev.wallet))
+  const provider = MultipleWalletProvider.env()
+  return buildMultisigProgram(provider, ev.multisigProgram)
 }
 
 export async function findMultisigSigner(
@@ -107,6 +98,7 @@ export async function getMultisigContext(
   multisigAddress: PublicKey,
 ): Promise<MultisigContext> {
   return {
+    provider: MultipleWalletProvider.env(),
     multisigProg: program,
     multisig: multisigAddress,
     multisigPDA: await findMultisigSigner(program.programId, multisigAddress),

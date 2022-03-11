@@ -114,7 +114,6 @@ cli
       await batchCreateProposals(
         await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
         rProposals.transactions,
-        opts.smallTx,
         opts.dryRun,
       )
     },

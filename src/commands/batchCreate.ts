@@ -10,18 +10,14 @@ import {
 } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext } from "../types"
+import { RetriableTransactionEnvelope } from "@parrotfi/common"
 
 /// create configured multisig tx
 export async function batchCreateProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
-  smallTransaction: boolean, //if encountered error: Transaction too large, use true
   drayRun: boolean,
 ) {
-  if (smallTransaction) {
-    console.log("use smallTransaction")
-  }
-
   const multisigProg = ctx.multisigProg
   ensureProposalsMemoUnique(proposals)
   const proposerPubkey = multisigProg.provider.wallet.publicKey
@@ -31,7 +27,11 @@ export async function batchCreateProposals(
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState)
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i]
-    if (multipleAccounts[i] && multipleAccounts[i].lamports > 0) {
+    const multipleAccountsEmpty =
+      multipleAccounts[i] &&
+      multipleAccounts[i].lamports > 0 &&
+      multipleAccounts[i].data.toString("hex").replaceAll("0", "").length === 0
+    if (multipleAccountsEmpty) {
       console.log(
         chalk.green(`ALREADY CREATED: `),
         prop.memo,
@@ -40,7 +40,7 @@ export async function batchCreateProposals(
       )
       continue
     }
-    await createTx(ctx, proposerPubkey, prop, smallTransaction, drayRun)
+    await createTx(ctx, proposerPubkey, prop, drayRun)
   }
 }
 
@@ -48,7 +48,6 @@ async function createTx(
   ctx: MultisigContext,
   proposerPubkey: PublicKey,
   proposal: ProposalBase,
-  smallTransaction: boolean,
   drayRun: boolean,
 ) {
   const transaction = proposal.calcTransactionAccount()
@@ -68,56 +67,69 @@ async function createTx(
     printKeys(ix.keys)
     return
   }
-
   const txSize = 100 + 34 * ix.keys.length + ix.data.length
 
-  if (smallTransaction) {
-    //first send prepare instructions
-    const prepareTxid = await ctx.multisigProg.provider.send(
-      new Transaction().add(
-        ...(instrs.prepare?.instructions || []),
-        await (ctx.multisigProg.account.transaction.createInstruction as any)(transaction, txSize),
-      ),
-      [...(instrs.prepare?.signers || []), transaction],
-    )
-    console.log("prepare txid:", prepareTxid)
+  // if (smallTransaction) {
+  //   //first send prepare instructions
+  //   const prepareTxid = await ctx.multisigProg.provider.send(
+  //     new Transaction().add(
+  //       ...(instrs.prepare?.instructions || []),
+  //       await (ctx.multisigProg.account.transaction.createInstruction as any)(transaction, txSize),
+  //     ),
+  //     [...(instrs.prepare?.signers || []), transaction],
+  //   )
+  //   console.log("prepare txid:", prepareTxid)
 
-    for (;;) {
-      console.log("check transaction account created successfully")
-      const transactionAccountSolBalance = await ctx.multisigProg.provider.connection.getBalance(
-        transaction.publicKey,
-      )
-      if (transactionAccountSolBalance > 0) {
-        console.log("wait 3s to ensure transaction created")
-        await sleep(3 * 1000)
-        break
-      }
-    }
+  //   for (;;) {
+  //     console.log("check transaction account created successfully")
+  //     const transactionAccountSolBalance = await ctx.multisigProg.provider.connection.getBalance(
+  //       transaction.publicKey,
+  //     )
+  //     if (transactionAccountSolBalance > 0) {
+  //       console.log("wait 3s to ensure transaction created")
+  //       await sleep(3 * 1000)
+  //       break
+  //     }
+  //   }
 
-    //then send create multisig transaction instruction
-    const txid = await ctx.multisigProg.rpc.createTransaction(ix.programId, ix.keys, ix.data, {
+  //   //then send create multisig transaction instruction
+  //   const txid = await ctx.multisigProg.rpc.createTransaction(ix.programId, ix.keys, ix.data, {
+  //     accounts: {
+  //       multisig: ctx.multisig,
+  //       transaction: transaction.publicKey,
+  //       proposer: proposerPubkey,
+  //       rent: SYSVAR_RENT_PUBKEY,
+  //     },
+  //   })
+  //   console.log("create multisig txid:", txid)
+  // } else {
+  const instruction = await ctx.multisigProg.instruction.createTransaction(
+    ix.programId,
+    ix.keys,
+    ix.data,
+    {
       accounts: {
         multisig: ctx.multisig,
         transaction: transaction.publicKey,
         proposer: proposerPubkey,
         rent: SYSVAR_RENT_PUBKEY,
       },
-    })
-    console.log("create multisig txid:", txid)
-  } else {
-    const txid = await ctx.multisigProg.rpc.createTransaction(ix.programId, ix.keys, ix.data, {
-      accounts: {
-        multisig: ctx.multisig,
-        transaction: transaction.publicKey,
-        proposer: proposerPubkey,
-        rent: SYSVAR_RENT_PUBKEY,
-      },
-      instructions: [
-        ...(instrs.prepare?.instructions || []),
-        await (ctx.multisigProg.account.transaction.createInstruction as any)(transaction, txSize),
-      ],
-      signers: [...(instrs.prepare?.signers || []), transaction],
-    })
-    console.log("create multisig txid:", txid)
+    },
+  )
+  const txEnvelope = new RetriableTransactionEnvelope(
+    ctx.provider,
+    [
+      ...(instrs.prepare?.instructions || []),
+      await (ctx.multisigProg.account.transaction.createInstruction as any)(transaction, txSize),
+      instruction,
+    ],
+    [...(instrs.prepare?.signers || []), transaction],
+  )
+  const receipts = await txEnvelope.confirmAll({ resend: 3, commitment: "finalized" })
+  const signatures: string[] = []
+  for (const receipt of receipts) {
+    signatures.push(receipt.signature)
   }
+
+  console.log(`create multisig in ${signatures.length} txid:`, signatures)
 }

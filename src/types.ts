@@ -1,3 +1,4 @@
+import { MultipleWalletProvider } from "@parrotfi/common"
 import { Program } from "@project-serum/anchor"
 import { AccountMeta, PublicKey } from "@solana/web3.js"
 import { ProposalBase } from "./instructions/ProposalBase"
@@ -5,6 +6,7 @@ import { ProposalBase } from "./instructions/ProposalBase"
 export type NamedPubkey = { [key: string]: PublicKey | PublicKey[] }
 
 export type MultisigContext = {
+  provider: MultipleWalletProvider
   multisigProg: Program
   multisig: PublicKey
   multisigPDA: PublicKey
@@ -34,6 +36,4 @@ export interface IProposals {
 
 export interface IEnv {
   multisigProgram: PublicKey
-  wallet: string
-  rpcUrl: string
 }
