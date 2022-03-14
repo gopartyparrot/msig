@@ -29,6 +29,7 @@
   "dependencies": {
     "@parrotfi/common": "https://github.com/gopartyparrot/common",
     "@project-serum/anchor": "^0.14.0",
+    "@saberhq/solana-contrib": "^1.12.52",
     "@solana/spl-token": "^0.1.8",
     "@solana/web3.js": "^1.30.2",
     "base64-js": "^1.5.1",
