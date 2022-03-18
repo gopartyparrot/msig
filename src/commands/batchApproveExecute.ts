@@ -9,13 +9,15 @@ import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext, MultisigStruct, MultisigTransactionStruct } from "../types"
 
 import { verify } from "./batchVerify"
+import { ButlerLike } from "../bin/cli"
 
 export async function batchApproveExecuteProposals(
   ctx: MultisigContext,
-  proposals: ProposalBase[],
+  butler: ButlerLike,
   skipExecute: boolean,
   verbose: boolean,
 ) {
+  const proposals = await butler.proposals()
   const multisigProg = ctx.multisigProg
   ensureProposalsMemoUnique(proposals)
   const proposerPubkey = multisigProg.provider.wallet.publicKey

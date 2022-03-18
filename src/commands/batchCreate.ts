@@ -5,19 +5,59 @@ import {
   assertProposerIsOwnerOfMultisig,
   betterPrintObjectWithPublicKey,
   ensureProposalsMemoUnique,
+  getMultisigContext,
   printKeys,
   sleep,
 } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext } from "../types"
 import { RetriableTransactionEnvelope } from "@parrotfi/common"
+import { ButlerLike } from "../bin/cli"
+import { web3 } from "@project-serum/anchor"
+
+export async function batchPrepare(ctx: MultisigContext, butler: ButlerLike, dryRun: boolean) {
+  const prepareOps = await butler.prepareOps()
+  for (const allow of Object.keys(prepareOps)) {
+    const ops = prepareOps[allow]
+
+    for (const prepare of ops) {
+      await executePrepareInstructions(ctx, prepare, dryRun)
+    }
+  }
+}
+
+export async function executePrepareInstructions(
+  ctx: MultisigContext,
+  instructions: web3.TransactionInstruction[],
+  dryRun: boolean,
+) {
+  if (instructions.length === 0) {
+    return
+  }
+  const provider = ctx.provider
+  const txEnvelop = new RetriableTransactionEnvelope(provider, instructions)
+  if (dryRun) {
+    const res = await txEnvelop.simulate()
+    console.log("dry run:")
+    console.log(res)
+    return
+  }
+  const receipts = await txEnvelop.confirmAll({ resend: 3 })
+  const signatures: string[] = []
+  for (const receipt of receipts) {
+    signatures.push(receipt.signature)
+  }
+
+  console.log(`prepare executed in ${signatures.length} txid:`, signatures)
+}
 
 /// create configured multisig tx
 export async function batchCreateProposals(
   ctx: MultisigContext,
-  proposals: ProposalBase[],
-  drayRun: boolean,
+  butler: ButlerLike,
+  dryRun: boolean,
 ) {
+  const proposals = await butler.proposals()
   const multisigProg = ctx.multisigProg
   ensureProposalsMemoUnique(proposals)
   const proposerPubkey = multisigProg.provider.wallet.publicKey
@@ -39,7 +79,7 @@ export async function batchCreateProposals(
       )
       continue
     }
-    await createTx(ctx, proposerPubkey, prop, drayRun)
+    await createTx(ctx, proposerPubkey, prop, dryRun)
   }
 }
 

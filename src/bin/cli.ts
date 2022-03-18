@@ -4,7 +4,7 @@ import { web3 } from "@project-serum/anchor"
 import * as packageJSON from "../../package.json"
 import { Command } from "commander"
 import { getMultisigContext, getProgramFromEnv, getWalletFromFile, setupJSONPrint } from "../utils"
-import { batchCreateProposals } from "../commands/batchCreate"
+import { batchPrepare, batchCreateProposals } from "../commands/batchCreate"
 import { batchVerifyProposals } from "../commands/batchVerify"
 import { batchApproveExecuteProposals } from "../commands/batchApproveExecute"
 import { setupMultisig } from "../commands/setupMultisig"
@@ -14,10 +14,12 @@ import { inspectMultisig } from "../commands/inspectMultisig"
 import { Account, PublicKey } from "@solana/web3.js"
 import { homedir } from "os"
 import { writeFileSync } from "fs"
+import { ProposalBase } from "../instructions"
 
 setupJSONPrint(PublicKey)
 setupJSONPrint(web3.PublicKey)
 
+// TODO deprecated maybe
 async function loadProposals(fname: string): Promise<IProposals> {
   const fpath = join(process.cwd(), ENV.proposalDir, fname)
   const mod = require(fpath).default
@@ -29,6 +31,20 @@ async function loadProposals(fname: string): Promise<IProposals> {
   }
 
   return mod
+}
+
+export interface ButlerLike {
+  multisig(): web3.PublicKey
+
+  proposals(): Promise<ProposalBase[]>
+
+  prepareOps(): Promise<Record<string, web3.TransactionInstruction[][]>>
+}
+
+async function loadButler(fname: string): Promise<ButlerLike> {
+  const fpath = join(process.cwd(), ENV.proposalDir, fname)
+  const butlerFunction = require(fpath).default
+  return butlerFunction()
 }
 
 // require("dotenv").config();
@@ -104,18 +120,16 @@ cli
   .option("--dry-run", "will not send transaction, just print instructions", false)
   .action(
     async (
-      proposals: string,
+      butlerName: string,
       opts: {
         smallTx: boolean
         dryRun: boolean
       },
     ) => {
-      const rProposals: IProposals = await loadProposals(proposals)
-      await batchCreateProposals(
-        await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
-        rProposals.transactions,
-        opts.dryRun,
-      )
+      const butler: ButlerLike = await loadButler(butlerName)
+      const ctx = await getMultisigContext(getProgramFromEnv(ENV), butler.multisig())
+      await batchPrepare(ctx, butler, opts.dryRun)
+      await batchCreateProposals(ctx, butler, opts.dryRun)
     },
   )
 
@@ -124,12 +138,12 @@ cli
   .description("verify created multisig transactions from proposals")
   .argument("[proposals]", "proposal js file", "proposals.js")
   .option("-m, --more", "verbose print", false)
-  .action(async (proposals: string, args: any) => {
-    const rProposals: IProposals = await loadProposals(proposals)
+  .action(async (butlerName: string, args: any) => {
+    const butler: ButlerLike = await loadButler(butlerName)
 
     await batchVerifyProposals(
-      await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
-      rProposals.transactions,
+      await getMultisigContext(getProgramFromEnv(ENV), butler.multisig()),
+      butler,
       args.more,
     )
   })
@@ -142,17 +156,17 @@ cli
   .option("-m, --more", "verbose print", false)
   .action(
     async (
-      proposals: string,
+      butlerName: string,
       args: {
         more: boolean
         skipExec: boolean
       },
     ) => {
-      const rProposals: IProposals = await loadProposals(proposals)
+      const butler: ButlerLike = await loadButler(butlerName)
       printEnv()
       await batchApproveExecuteProposals(
-        await getMultisigContext(getProgramFromEnv(ENV), rProposals.multisig),
-        rProposals.transactions,
+        await getMultisigContext(getProgramFromEnv(ENV), butler.multisig()),
+        butler,
         args.skipExec,
         args.more,
       )

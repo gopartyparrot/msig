@@ -2,13 +2,15 @@ import chalk from "chalk"
 import { ensureProposalsMemoUnique, fetchProposalsChainStates, printKeys } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext, MultisigTransactionStruct } from "../types"
+import { ButlerLike } from "../bin/cli"
 
 /// verify configured multisig tx
 export async function batchVerifyProposals(
   ctx: MultisigContext,
-  proposals: ProposalBase[],
+  butler: ButlerLike,
   verbose: boolean,
 ) {
+  const proposals = await butler.proposals()
   const multisigProg = ctx.multisigProg
   ensureProposalsMemoUnique(proposals)
   const chainTransactions = await fetchProposalsChainStates(multisigProg, proposals)
