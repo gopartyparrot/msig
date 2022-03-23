@@ -1,4 +1,4 @@
-import { PublicKey, SYSVAR_RENT_PUBKEY, Transaction } from "@solana/web3.js"
+import { AccountInfo, Keypair, PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 import chalk from "chalk"
 import { fromByteArray } from "base64-js"
 import {
@@ -6,40 +6,32 @@ import {
   betterPrintObjectWithPublicKey,
   ensureProposalsMemoUnique,
   printKeys,
-  sleep,
 } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext } from "../types"
 import { RetriableTransactionEnvelope } from "@parrotfi/common"
+import { web3 } from "@project-serum/anchor"
 
 /// create configured multisig tx
 export async function batchCreateProposals(
   ctx: MultisigContext,
   proposals: ProposalBase[],
-  drayRun: boolean,
+  dryRun: boolean,
 ) {
   const multisigProg = ctx.multisigProg
   ensureProposalsMemoUnique(proposals)
   const proposerPubkey = multisigProg.provider.wallet.publicKey
-  const txPubkeys = proposals.map((p) => p.calcTransactionAccount().publicKey)
-  const multipleAccounts = await multisigProg.provider.connection.getMultipleAccountsInfo(txPubkeys)
+  const txAccounts = proposals.map((p) => p.calcTransactionAccount())
+  const txAccountsInfo = await multisigProg.provider.connection.getMultipleAccountsInfo(
+    txAccounts.map((acc) => acc.publicKey),
+  )
   const multisigState: any = await multisigProg.account.multisig.fetch(ctx.multisig)
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState)
   for (let i = 0; i < proposals.length; i++) {
     const prop = proposals[i]
-    const multipleAccountsEmpty = multipleAccounts[i] && multipleAccounts[i].lamports > 0
-    // TODO init multisig if account data is empty
-    // && multipleAccounts[i].data.toString("hex").replaceAll("0", "").length === 0
-    if (multipleAccountsEmpty) {
-      console.log(
-        chalk.green(`ALREADY CREATED: `),
-        prop.memo,
-        chalk.grey(" => "),
-        prop.calcTransactionAccount().publicKey.toBase58(),
-      )
-      continue
-    }
-    await createTx(ctx, proposerPubkey, prop, drayRun)
+    const txAccount = txAccounts[i]
+    const txAccountInfo = txAccountsInfo[i]
+    await createTx(ctx, proposerPubkey, prop, txAccount, txAccountInfo, dryRun)
   }
 }
 
@@ -47,18 +39,30 @@ async function createTx(
   ctx: MultisigContext,
   proposerPubkey: PublicKey,
   proposal: ProposalBase,
-  drayRun: boolean,
+  txAccount: Keypair,
+  txAccountInfo: AccountInfo<Buffer>,
+  dryRun: boolean,
 ) {
-  const transaction = proposal.calcTransactionAccount()
+  const prepareInstructions: web3.TransactionInstruction[] = []
+  const instructions: web3.TransactionInstruction[] = []
+  const signers: Keypair[] = []
+
+  const accountNotExist = !txAccountInfo || txAccountInfo.lamports == 0
+  const accountEmpty =
+    accountNotExist || txAccountInfo.data.toString("hex").replaceAll("0", "").length === 0
+  if (!accountEmpty) {
+    console.log(
+      chalk.green(`ALREADY CREATED: `),
+      proposal.memo,
+      chalk.grey(" => "),
+      proposal.calcTransactionAccount().publicKey.toBase58(),
+    )
+    return
+  }
   const instrs = await proposal.createInstr(ctx)
   const ix = instrs.multisigInstr
 
-  console.log("create tx: ", transaction.publicKey.toBase58())
-  betterPrintObjectWithPublicKey(proposal)
-  printKeys(ix.keys)
-  console.log("local created instr in base64: ", fromByteArray(ix.data))
-
-  if (drayRun) {
+  if (dryRun) {
     console.log("multisig instr:")
     console.log("programId:", ix.programId.toBase58())
     console.log("data:", ix.data)
@@ -66,31 +70,38 @@ async function createTx(
     printKeys(ix.keys)
     return
   }
-  const txSize = 100 + 34 * ix.keys.length + ix.data.length
 
-  const instruction = await ctx.multisigProg.instruction.createTransaction(
-    ix.programId,
-    ix.keys,
-    ix.data,
-    {
-      accounts: {
-        multisig: ctx.multisig,
-        transaction: transaction.publicKey,
-        proposer: proposerPubkey,
-        rent: SYSVAR_RENT_PUBKEY,
-      },
-    },
-  )
+  if (accountNotExist) {
+    const txSize = 100 + 34 * ix.keys.length + ix.data.length
+    prepareInstructions.push(
+      await (ctx.multisigProg.account.transaction.createInstruction as any)(txAccount, txSize),
+    )
+    signers.push(txAccount)
+  }
+
+  if (accountEmpty) {
+    instructions.push(
+      await ctx.multisigProg.instruction.createTransaction(ix.programId, ix.keys, ix.data, {
+        accounts: {
+          multisig: ctx.multisig,
+          transaction: txAccount.publicKey,
+          proposer: proposerPubkey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+      }),
+    )
+    console.log("create tx: ", txAccount.publicKey.toBase58())
+    betterPrintObjectWithPublicKey(proposal)
+    printKeys(ix.keys)
+    console.log("local created instr in base64: ", fromByteArray(ix.data))
+  }
+
   const txEnvelope = new RetriableTransactionEnvelope(
     ctx.provider,
-    [
-      ...(instrs.prepare?.instructions || []),
-      await (ctx.multisigProg.account.transaction.createInstruction as any)(transaction, txSize),
-      instruction,
-    ],
-    [...(instrs.prepare?.signers || []), transaction],
+    [...prepareInstructions, ...instructions],
+    signers,
   )
-  const receipts = await txEnvelope.confirmAll({ resend: 3, commitment: "finalized" })
+  const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
   const signatures: string[] = []
   for (const receipt of receipts) {
     signatures.push(receipt.signature)
