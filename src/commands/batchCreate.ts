@@ -46,10 +46,6 @@ async function createTx(
   const accountNotExist = !txAccountInfo || txAccountInfo.lamports == 0
   const accountEmpty =
     accountNotExist || txAccountInfo.data.toString("hex").replaceAll("0", "").length === 0
-  console.log({
-    accountNotExist,
-    accountEmpty,
-  })
   if (!accountEmpty) {
     console.log(
       chalk.green(`ALREADY CREATED: `),
@@ -67,7 +63,7 @@ async function createTx(
   if (dryRun) {
     console.log("multisig instr:")
     console.log("programId:", ix.programId.toBase58())
-    console.log("data:", ix.data)
+    console.log("data:", ix.data.toString("hex"))
     console.log("accounts:")
     printKeys(ix.keys)
     return
