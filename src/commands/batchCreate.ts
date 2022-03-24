@@ -43,13 +43,13 @@ async function createTx(
   txAccountInfo: AccountInfo<Buffer>,
   dryRun: boolean,
 ) {
-  const prepareInstructions: web3.TransactionInstruction[] = []
-  const instructions: web3.TransactionInstruction[] = []
-  const signers: Keypair[] = []
-
   const accountNotExist = !txAccountInfo || txAccountInfo.lamports == 0
   const accountEmpty =
     accountNotExist || txAccountInfo.data.toString("hex").replaceAll("0", "").length === 0
+  console.log({
+    accountNotExist,
+    accountEmpty,
+  })
   if (!accountEmpty) {
     console.log(
       chalk.green(`ALREADY CREATED: `),
@@ -61,6 +61,8 @@ async function createTx(
   }
   const instrs = await proposal.createInstr(ctx)
   const ix = instrs.multisigInstr
+  const instructions: web3.TransactionInstruction[] = instrs.prepare.instructions ?? []
+  const signers: web3.Signer[] = instrs.prepare.signers ?? []
 
   if (dryRun) {
     console.log("multisig instr:")
@@ -73,7 +75,7 @@ async function createTx(
 
   if (accountNotExist) {
     const txSize = 100 + 34 * ix.keys.length + ix.data.length
-    prepareInstructions.push(
+    instructions.push(
       await (ctx.multisigProg.account.transaction.createInstruction as any)(txAccount, txSize),
     )
     signers.push(txAccount)
@@ -96,11 +98,7 @@ async function createTx(
     console.log("local created instr in base64: ", fromByteArray(ix.data))
   }
 
-  const txEnvelope = new RetriableTransactionEnvelope(
-    ctx.provider,
-    [...prepareInstructions, ...instructions],
-    signers,
-  )
+  const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instructions, signers)
   const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
   const signatures: string[] = []
   for (const receipt of receipts) {
