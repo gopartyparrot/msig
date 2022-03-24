@@ -6,10 +6,11 @@ import {
   betterPrintObjectWithPublicKey,
   ensureProposalsMemoUnique,
   printKeys,
+  printProposalCreationState,
 } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext } from "../types"
-import { RetriableTransactionEnvelope } from "@parrotfi/common"
+import { RetriableTransactionEnvelope, sleep } from "@parrotfi/common"
 import { web3 } from "@project-serum/anchor"
 
 /// create configured multisig tx
@@ -27,12 +28,20 @@ export async function batchCreateProposals(
   )
   const multisigState: any = await multisigProg.account.multisig.fetch(ctx.multisig)
   assertProposerIsOwnerOfMultisig(proposerPubkey, multisigState)
-  for (let i = 0; i < proposals.length; i++) {
+  const status: Map<string, string> = new Map<string, string>()
+  const promises = proposals.map(async (_, i) => {
     const prop = proposals[i]
     const txAccount = txAccounts[i]
     const txAccountInfo = txAccountsInfo[i]
-    await createTx(ctx, proposerPubkey, prop, txAccount, txAccountInfo, dryRun)
-  }
+    status.set(prop.memo, "pending")
+    const sigs = await createTx(ctx, proposerPubkey, prop, txAccount, txAccountInfo, dryRun)
+    status.set(prop.memo, sigs.toString())
+  })
+
+  const tid = setInterval(printProposalCreationState(status), 3000)
+  await Promise.all(promises)
+  printProposalCreationState(status)()
+  clearInterval(tid)
 }
 
 async function createTx(
@@ -42,20 +51,16 @@ async function createTx(
   txAccount: Keypair,
   txAccountInfo: AccountInfo<Buffer>,
   dryRun: boolean,
-) {
+): Promise<string> {
   const accountNotExist = !txAccountInfo || txAccountInfo.lamports == 0
   const accountEmpty =
     accountNotExist || txAccountInfo.data.toString("hex").replaceAll("0", "").length === 0
   if (!accountEmpty) {
-    console.log(
-      chalk.green(`ALREADY CREATED: `),
-      proposal.memo,
-      chalk.grey(" => "),
-      proposal.calcTransactionAccount().publicKey.toBase58(),
-    )
-    return
+    return `${chalk.green(`already created: `)} ${chalk.grey(" => ")} ${proposal
+      .calcTransactionAccount()
+      .publicKey.toBase58()}`
   }
-  const instrs = await proposal.createInstr(ctx)
+  const instrs = await proposal.createInstr(ctx, true)
   const ix = instrs.multisigInstr
   const instructions: web3.TransactionInstruction[] = instrs.prepare.instructions ?? []
   const signers: web3.Signer[] = instrs.prepare.signers ?? []
@@ -66,7 +71,7 @@ async function createTx(
     console.log("data:", ix.data.toString("hex"))
     console.log("accounts:")
     printKeys(ix.keys)
-    return
+    return "created"
   }
 
   if (accountNotExist) {
@@ -88,10 +93,10 @@ async function createTx(
         },
       }),
     )
-    console.log("create tx: ", txAccount.publicKey.toBase58())
+    // console.log("create tx: ", txAccount.publicKey.toBase58())
     betterPrintObjectWithPublicKey(proposal)
     printKeys(ix.keys)
-    console.log("local created instr in base64: ", fromByteArray(ix.data))
+    // console.log("local created instr in base64: ", fromByteArray(ix.data))
   }
 
   const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instructions, signers)
@@ -101,5 +106,5 @@ async function createTx(
     signatures.push(receipt.signature)
   }
 
-  console.log(`create multisig in ${signatures.length} txid:`, signatures)
+  return signatures.toString()
 }

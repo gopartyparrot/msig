@@ -66,7 +66,7 @@ export abstract class ProposalBase {
   }
 
   // use deterministic address (calculated from memo string)
-  abstract createInstr(ctx: MultisigContext): Promise<TransactionInstructionExt>
+  abstract createInstr(ctx: MultisigContext, quiet?: boolean): Promise<TransactionInstructionExt>
 }
 
 export type TransactionInstructionExt = {
