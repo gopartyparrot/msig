@@ -192,10 +192,8 @@ function betterPublicKeyJSONObject(obj) {
 }
 
 export function printProposalCreationState(status: Map<string, string>) {
-  return () => {
-    console.clear()
-    for (const [key, state] of status.entries()) {
-      console.log(`${key} => ${state}`)
-    }
+  console.clear()
+  for (const [key, state] of status.entries()) {
+    console.log(`${key} => ${state}`)
   }
 }

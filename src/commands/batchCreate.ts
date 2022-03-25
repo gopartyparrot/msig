@@ -38,10 +38,13 @@ export async function batchCreateProposals(
     status.set(prop.memo, sigs.toString())
   })
 
-  const tid = setInterval(printProposalCreationState(status), 3000)
-  await Promise.all(promises)
-  printProposalCreationState(status)()
-  clearInterval(tid)
+  const tid = setInterval(() => printProposalCreationState(status), 3000)
+  try {
+    await Promise.all(promises)
+  } finally {
+    clearInterval(tid)
+  }
+  printProposalCreationState(status)
 }
 
 async function createTx(
@@ -60,7 +63,7 @@ async function createTx(
       .calcTransactionAccount()
       .publicKey.toBase58()}`
   }
-  const instrs = await proposal.createInstr(ctx, true)
+  const instrs = await proposal.createInstr(ctx)
   const ix = instrs.multisigInstr
   const instructions: web3.TransactionInstruction[] = instrs.prepare?.instructions ?? []
   const signers: web3.Signer[] = instrs.prepare?.signers ?? []
