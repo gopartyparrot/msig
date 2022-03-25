@@ -93,10 +93,6 @@ async function createTx(
         },
       }),
     )
-    // console.log("create tx: ", txAccount.publicKey.toBase58())
-    betterPrintObjectWithPublicKey(proposal)
-    printKeys(ix.keys)
-    // console.log("local created instr in base64: ", fromByteArray(ix.data))
   }
 
   const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instructions, signers)
