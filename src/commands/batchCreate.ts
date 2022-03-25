@@ -62,8 +62,8 @@ async function createTx(
   }
   const instrs = await proposal.createInstr(ctx, true)
   const ix = instrs.multisigInstr
-  const instructions: web3.TransactionInstruction[] = instrs.prepare.instructions ?? []
-  const signers: web3.Signer[] = instrs.prepare.signers ?? []
+  const instructions: web3.TransactionInstruction[] = instrs.prepare?.instructions ?? []
+  const signers: web3.Signer[] = instrs.prepare?.signers ?? []
 
   if (dryRun) {
     console.log("multisig instr:")
