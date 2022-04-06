@@ -1,6 +1,6 @@
 import { Program, Wallet } from "@project-serum/anchor"
 import { AccountInfo, AccountMeta, Keypair, PublicKey, Transaction } from "@solana/web3.js"
-import { MultipleWalletProvider } from "@parrotfi/common"
+import { MultipleWalletProvider } from "@parrotfi/core-sdk"
 import { readFileSync } from "fs"
 import { ProposalBase } from "./instructions/ProposalBase"
 import { MultisigStruct, MultisigTransactionStruct } from "./types"

@@ -10,7 +10,7 @@ import {
 } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext } from "../types"
-import { RetriableTransactionEnvelope, sleep } from "@parrotfi/common"
+import { RetriableTransactionEnvelope, sleep } from "@parrotfi/core-sdk"
 import { web3 } from "@project-serum/anchor"
 
 /// create configured multisig tx

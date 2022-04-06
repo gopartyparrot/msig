@@ -1,4 +1,4 @@
-import { MultipleWalletProvider } from "@parrotfi/common"
+import { MultipleWalletProvider } from "@parrotfi/core-sdk"
 import { Program } from "@project-serum/anchor"
 import { AccountMeta, PublicKey } from "@solana/web3.js"
 import { ProposalBase } from "./instructions/ProposalBase"
