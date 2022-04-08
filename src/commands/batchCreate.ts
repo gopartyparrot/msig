@@ -1,16 +1,14 @@
 import { AccountInfo, Keypair, PublicKey, SYSVAR_RENT_PUBKEY } from "@solana/web3.js"
 import chalk from "chalk"
-import { fromByteArray } from "base64-js"
 import {
   assertProposerIsOwnerOfMultisig,
-  betterPrintObjectWithPublicKey,
   ensureProposalsMemoUnique,
   printKeys,
   printProposalCreationState,
 } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext } from "../types"
-import { RetriableTransactionEnvelope, sleep } from "@parrotfi/core-sdk"
+import { RetriableTransactionEnvelope } from "@parrotfi/core-sdk"
 import { web3 } from "@project-serum/anchor"
 
 /// create configured multisig tx

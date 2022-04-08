@@ -9,6 +9,7 @@ import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext, MultisigStruct, MultisigTransactionStruct } from "../types"
 
 import { verify } from "./batchVerify"
+import { RetriableTransactionEnvelope } from "@parrotfi/core-sdk"
 
 export async function batchApproveExecuteProposals(
   ctx: MultisigContext,
@@ -117,6 +118,12 @@ async function approveExecute(
       }),
     )
   }
-  const txid = await ctx.multisigProg.provider.send(new Transaction().add(...instrs))
-  console.log("execute txid:", txid)
+  const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instrs, [])
+  const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
+  const signatures: string[] = []
+  for (const receipt of receipts) {
+    signatures.push(receipt.signature)
+  }
+
+  console.log("signatures: ", signatures.toString())
 }
