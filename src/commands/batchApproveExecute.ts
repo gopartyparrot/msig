@@ -120,10 +120,9 @@ async function approveExecute(
   }
   const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instrs, [])
   const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
-  const signatures: string[] = []
-  for (const receipt of receipts) {
-    signatures.push(receipt.signature)
-  }
 
-  console.log("signatures: ", signatures.toString())
+  console.log(
+    "signatures: ",
+    receipts.map((receipt) => receipt.signature),
+  )
 }

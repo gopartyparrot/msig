@@ -98,10 +98,6 @@ async function createTx(
 
   const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instructions, signers)
   const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
-  const signatures: string[] = []
-  for (const receipt of receipts) {
-    signatures.push(receipt.signature)
-  }
 
-  return signatures.toString()
+  return receipts.map((receipt) => receipt.signature).toString()
 }
