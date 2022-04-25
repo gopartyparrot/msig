@@ -1,0 +1,1 @@
+{"version":3,"file":"setupMultisig.d.ts","sourceRoot":"","sources":["../../../src/commands/setupMultisig.ts"],"names":[],"mappings":"AAAA,OAAO,EAAM,OAAO,EAAE,MAAM,uBAAuB,CAAA;AACnD,OAAO,EAAE,OAAO,EAAiC,MAAM,iBAAiB,CAAA;AAGxE,wBAAsB,aAAa,CACjC,eAAe,EAAE,OAAO,EACxB,SAAS,EAAE,MAAM,EACjB,OAAO,EAAE,MAAM,EAAE,EACjB,QAAQ,CAAC,EAAE,OAAO,iBAoCnB"}

@@ -64,5 +64,3 @@ dist/**
 # don't track local configs
 src/bin/knownAccounts.ts
 id.json
-
-lib/
