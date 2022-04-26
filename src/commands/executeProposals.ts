@@ -5,8 +5,7 @@ import { batchCreateProposals } from "./batchCreate"
 
 export async function executeProposals(
   proposal: IProposals,
-  dryRun = false,
-  opts: Partial<IEnv> = {},
+  opts: Partial<IEnv & { dryRun: boolean }> = {},
 ) {
   const env = {
     multisigProgram: new PublicKey(
@@ -18,6 +17,6 @@ export async function executeProposals(
   await batchCreateProposals(
     await getMultisigContext(getProgramFromEnv(env), proposal.multisig),
     proposal.transactions,
-    dryRun,
+    opts.dryRun,
   )
 }
