@@ -1,0 +1,1 @@
+{"version":3,"file":"executeProposals.d.ts","sourceRoot":"","sources":["../../../src/commands/executeProposals.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,IAAI,EAAE,UAAU,EAAE,MAAM,UAAU,CAAA;AAI3C,wBAAsB,gBAAgB,CACpC,QAAQ,EAAE,UAAU,EACpB,IAAI,GAAE,OAAO,CAAC,IAAI,GAAG;IAAE,MAAM,EAAE,OAAO,CAAA;CAAE,CAAM,iBAc/C"}
