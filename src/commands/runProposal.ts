@@ -14,7 +14,7 @@ interface IOptions {
 
 export async function runProposal(
   proposal: IProposals,
-  action: "create" | "approve" | "verify",
+  action: "create" | "approve" | "verify" | "execute",
   opts: IOptions = {},
 ) {
   const env = {
@@ -31,6 +31,7 @@ export async function runProposal(
       await batchCreateProposals(ctx, proposal.transactions, opts.dryRun)
       break
     case "approve":
+    case "execute":
       await batchApproveExecuteProposals(ctx, proposal.transactions, opts.skipExecute, opts.verbose)
       break
     default:
