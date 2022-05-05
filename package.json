@@ -26,21 +26,18 @@
     "msig": "./lib/src/bin/cli.js"
   },
   "license": "MIT",
-  "dependencies": {
+  "devDependencies": {
     "@parrotfi/core-sdk": "0.0.25",
-    "@project-serum/anchor": "^0.14.0",
+    "@project-serum/anchor": "^0.18.2",
     "@saberhq/solana-contrib": "^1.12.52",
     "@solana/buffer-layout": "3.0.0",
     "@solana/spl-token": "^0.1.8",
-    "@solana/web3.js": "^1.30.2",
     "base64-js": "^1.5.1",
     "bignumber.js": "^9.0.2",
     "chalk": "^4.1.2",
     "commander": "^8.2.0",
     "dotenv": "^10.0.0",
-    "tweetnacl": "^1.0.3"
-  },
-  "devDependencies": {
+    "tweetnacl": "^1.0.3",
     "@types/jest": "^27.0.1",
     "@types/node": "^16.9.4",
     "env-cmd": "^10.1.0",
