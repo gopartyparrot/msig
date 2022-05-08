@@ -542,10 +542,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@parrotfi/core-sdk@0.0.25":
-  version "0.0.25"
-  resolved "https://registry.yarnpkg.com/@parrotfi/core-sdk/-/core-sdk-0.0.25.tgz#11a00f6c8b992e975ac664f964b46e1868b80755"
-  integrity sha512-9+MA1K8wtcc/fvq9NJBxZ0en+xV5AAemUiXA/Zm55S/eXatIE0Tkf9gfcZh4JaCXgcYESWCzhbunx1Xp+VOhfw==
+"@parrotfi/core-sdk@0.0.26":
+  version "0.0.26"
+  resolved "https://registry.yarnpkg.com/@parrotfi/core-sdk/-/core-sdk-0.0.26.tgz#16133021720a3de571519676e074f1de2ffa8df9"
+  integrity sha512-byeeMhICP9cnltbpqXnVHcRB4jnXncuukRoltWpwzItXMP76QPN4trLPv8xxQEc4olJi5a2mIqKXB8a+T9XIJA==
 
 "@project-serum/anchor@^0.18.2":
   version "0.18.2"

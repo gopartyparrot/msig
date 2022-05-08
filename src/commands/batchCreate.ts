@@ -85,7 +85,7 @@ async function createTx(
 
   if (accountEmpty) {
     instructions.push(
-      await ctx.multisigProg.instruction.createTransaction(ix.programId, ix.keys, ix.data, {
+      ctx.multisigProg.instruction.createTransaction(ix.programId, ix.keys, ix.data, {
         accounts: {
           multisig: ctx.multisig,
           transaction: txAccount.publicKey,
@@ -97,7 +97,11 @@ async function createTx(
   }
 
   const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instructions, signers)
-  const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
+  const receipts = await txEnvelope.confirmAll({
+    resend: 100,
+    commitment: "finalized",
+    verbose: false,
+  })
 
   return receipts.map((receipt) => receipt.signature).toString()
 }

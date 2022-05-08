@@ -1,6 +1,5 @@
-import { Program, Wallet } from "@project-serum/anchor"
+import { Program, Provider, Wallet } from "@project-serum/anchor"
 import { AccountInfo, AccountMeta, Keypair, PublicKey, Transaction } from "@solana/web3.js"
-import { MultipleWalletProvider } from "@parrotfi/core-sdk"
 import { readFileSync } from "fs"
 import { ProposalBase } from "./instructions/ProposalBase"
 import { MultisigStruct, MultisigTransactionStruct } from "./types"
@@ -8,6 +7,7 @@ import util from "util"
 
 import multisigIdl from "./serum_multisig_idl.json"
 import { IEnv, MultisigContext } from "."
+import { SingleConnectionBroadcaster, SolanaProvider } from "@saberhq/solana-contrib"
 
 export function printKeys(keys: Array<AccountMeta>) {
   const bs = (b: boolean): string => (b ? "y" : "n") //bool string
@@ -67,18 +67,16 @@ export function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export function buildMultisigProgram(
-  provider: MultipleWalletProvider,
-  multisigProgramId: PublicKey,
-): Program {
-  return new Program(multisigIdl as any, multisigProgramId, provider.anchorProvider)
+export function buildMultisigProgram(provider: Provider, multisigProgramId: PublicKey): Program {
+  return new Program(multisigIdl as any, multisigProgramId, provider)
 }
 
 export function getWalletFromFile(path: string): Keypair {
   return Keypair.fromSecretKey(Buffer.from(JSON.parse(readFileSync(path, { encoding: "utf-8" }))))
 }
+
 export function getProgramFromEnv(ev: IEnv): Program {
-  const provider = MultipleWalletProvider.env()
+  const provider = Provider.env()
   return buildMultisigProgram(provider, ev.multisigProgram)
 }
 
@@ -93,12 +91,21 @@ export async function findMultisigSigner(
   return multisigSigner
 }
 
+export function solanaProviderFromEnv() {
+  const provider = Provider.env()
+  return new SolanaProvider(
+    provider.connection,
+    new SingleConnectionBroadcaster(provider.connection),
+    provider.wallet,
+  )
+}
+
 export async function getMultisigContext(
   program: Program,
   multisigAddress: PublicKey,
 ): Promise<MultisigContext> {
   return {
-    provider: MultipleWalletProvider.env(),
+    provider: solanaProviderFromEnv(),
     multisigProg: program,
     multisig: multisigAddress,
     multisigPDA: await findMultisigSigner(program.programId, multisigAddress),

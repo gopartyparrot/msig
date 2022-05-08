@@ -1,4 +1,4 @@
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3.js"
+import { PublicKey, TransactionInstruction } from "@solana/web3.js"
 import chalk from "chalk"
 import {
   assertProposerIsOwnerOfMultisig,
@@ -119,7 +119,11 @@ async function approveExecute(
     )
   }
   const txEnvelope = new RetriableTransactionEnvelope(ctx.provider, instrs, [])
-  const receipts = await txEnvelope.confirmAll({ resend: 100, commitment: "finalized" })
+  const receipts = await txEnvelope.confirmAll({
+    resend: 100,
+    commitment: "finalized",
+    verbose: false,
+  })
 
   console.log(
     "signatures: ",

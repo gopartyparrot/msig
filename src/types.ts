@@ -1,12 +1,12 @@
-import { MultipleWalletProvider } from "@parrotfi/core-sdk"
 import { Program } from "@project-serum/anchor"
+import { SolanaProvider } from "@saberhq/solana-contrib"
 import { AccountMeta, PublicKey } from "@solana/web3.js"
 import { ProposalBase } from "./instructions/ProposalBase"
 
 export type NamedPubkey = { [key: string]: PublicKey | PublicKey[] }
 
 export type MultisigContext = {
-  provider: MultipleWalletProvider
+  provider: SolanaProvider
   multisigProg: Program
   multisig: PublicKey
   multisigPDA: PublicKey

@@ -1,5 +1,5 @@
 import chalk from "chalk"
-import { ensureProposalsMemoUnique, fetchProposalsChainStates, printKeys } from "../utils"
+import { ensureProposalsMemoUnique, fetchProposalsChainStates } from "../utils"
 import { ProposalBase } from "../instructions/ProposalBase"
 import { MultisigContext, MultisigTransactionStruct } from "../types"
 
